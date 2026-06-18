@@ -1,0 +1,159 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
+  --shadow-stripe: 0 2px 5px 0 rgba(50, 50, 93, 0.1),
+    0 1px 1px 0 rgba(0, 0, 0, 0.07);
+  --shadow-stripe-lg: 0 13px 27px -5px rgba(50, 50, 93, 0.25),
+    0 8px 16px -8px rgba(0, 0, 0, 0.3);
+  --color-primary-hover: var(--primary-hover);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success-bright: var(--success-bright);
+  --color-warning-bright: var(--warning-bright);
+  --color-gold: var(--gold);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f6f9fc;
+  --foreground: #0a2540;
+  --card: #ffffff;
+  --card-foreground: #0a2540;
+  --popover: #ffffff;
+  --popover-foreground: #0a2540;
+  --primary: #635bff;
+  --primary-foreground: #ffffff;
+  --primary-hover: #5851e5;
+  --secondary: #f6f9fc;
+  --secondary-foreground: #425466;
+  --muted: #f6f9fc;
+  --muted-foreground: #8898aa;
+  --accent: #eef2f7;
+  --accent-foreground: #0a2540;
+  --destructive: #df1b41;
+  --destructive-foreground: #ffffff;
+  --success: #00a318;
+  --success-bright: #00d924;
+  --success-foreground: #ffffff;
+  --warning: #c17a00;
+  --warning-bright: #f5a623;
+  --warning-foreground: #ffffff;
+  --info: #0a66c2;
+  --info-foreground: #ffffff;
+  --gold: #f5be47;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --border: #e3e8ef;
+  --input: #e3e8ef;
+  --ring: #635bff;
+  --chart-1: #635bff;
+  --chart-2: #0a2540;
+  --chart-3: #00a318;
+  --chart-4: #f5a623;
+  --chart-5: #df1b41;
+  --radius: 0.5rem;
+  --sidebar: #0a2540;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #635bff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(99, 91, 255, 0.2);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1a3c5e;
+  --sidebar-ring: #635bff;
+}
+
+@layer utilities {
+  /* Stripe dark hero gradient. */
+  .hero-gradient {
+    background-color: #0a2540;
+    background-image: linear-gradient(135deg, #0a2540 0%, #1a3c5e 100%);
+  }
+  /* Brand gradient — use sparingly on CTAs or banners. */
+  .brand-gradient {
+    background-image: linear-gradient(135deg, #635bff 0%, #7c3aed 100%);
+  }
+  /* Leaderboard top banner gradient. */
+  .leaderboard-gradient {
+    background-image: linear-gradient(135deg, #0a2540 0%, #635bff 100%);
+  }
+  /* Uppercase caps label, per Stripe spec. */
+  .label-caps {
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* Stripe's signature diagonal stripe motif for dark hero panels. */
+  .stripe-texture {
+    background-image: repeating-linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 2px,
+      transparent 2px,
+      transparent 14px
+    );
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
