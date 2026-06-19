@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   title: 'Stripe Workshop Platform',
   description:
     'Hands-on learning experiences for Stripe customers, run by Stripe Solutions Architects.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

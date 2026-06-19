@@ -29,6 +29,11 @@ import {
   Target,
   ShieldAlert,
 } from 'lucide-react'
+import { SessionEndedChallenge } from '@/components/participant/session-ended'
+import {
+  SessionTimerChip,
+  SessionEndingBanner,
+} from '@/components/participant/session-timer'
 
 type Participant = {
   id: string
@@ -41,7 +46,11 @@ type EventRow = {
   name: string
   description: string | null
   status: string
+  eventType: string
   eventTheme: string
+  sessionEndsAt: string
+  createdAt: string
+  durationMinutes: number
 }
 type ProgressRow = { moduleId: string; status: string; score: number }
 type Wave = { id: string; waveType: string; label: string; firedAt: string }
@@ -51,6 +60,21 @@ type LeaderRow = {
   company: string | null
   score: number
   currentModule: number
+}
+
+type LivePayload = {
+  roster: LeaderRow[]
+  waves: Wave[]
+  meId: string
+  event: {
+    id: string
+    name: string
+    status: string
+    eventType: string
+    sessionEndsAt: string
+    createdAt: string
+    durationMinutes: number
+  }
 }
 
 type InitialData = {
@@ -70,6 +94,7 @@ export function WorkshopExperience({
   const router = useRouter()
   const { participant, event } = initialData
   const eventTheme = getTheme(event.eventTheme)
+  const EventThemeIcon = eventTheme?.Icon
 
   const [progress, setProgress] = useState<ProgressRow[]>(initialData.progress)
   const [score, setScore] = useState(participant.score)
@@ -98,18 +123,29 @@ export function WorkshopExperience({
   const [selectedId, setSelectedId] = useState(firstIncomplete.id)
   const selected = getModule(selectedId)!
 
-  // Live leaderboard + active attack waves.
-  const { data: live } = useSWR<{
-    roster: LeaderRow[]
-    waves: Wave[]
-    meId: string
-  }>('/api/workshop/live', fetcher, {
-    fallbackData: { roster: [], waves: initialData.waves, meId: participant.id },
-    refreshInterval: 4000,
+  // Live roster, waves, and session clock (poll ~30s for end-of-session sync).
+  const { data: live } = useSWR<LivePayload>('/api/workshop/live', fetcher, {
+    fallbackData: {
+      roster: [],
+      waves: initialData.waves,
+      meId: participant.id,
+      event: {
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        eventType: event.eventType,
+        sessionEndsAt: event.sessionEndsAt,
+        createdAt: event.createdAt,
+        durationMinutes: event.durationMinutes,
+      },
+    },
+    refreshInterval: 30_000,
   })
 
   const roster = live?.roster ?? []
   const activeWaves = live?.waves ?? []
+  const sessionClock =
+    live?.event?.sessionEndsAt ?? event.sessionEndsAt
 
   function isUnlocked(order: number) {
     if (order === 1) return true
@@ -119,7 +155,7 @@ export function WorkshopExperience({
 
   function selectModule(id: string, order: number) {
     if (!isUnlocked(order)) {
-      toast.error('Complete the previous module to unlock this one.')
+      toast.error('Finish the earlier module in this session to unlock this one.')
       return
     }
     setSelectedId(id)
@@ -178,23 +214,35 @@ export function WorkshopExperience({
   const myRank =
     roster.findIndex((r) => r.id === (live?.meId ?? participant.id)) + 1
 
+  if (live?.event?.status === 'ended') {
+    return (
+      <SessionEndedChallenge
+        eventName={live.event.name}
+        roster={roster}
+        myId={live.meId}
+        myScore={score}
+      />
+    )
+  }
+
   return (
     <div className="min-h-svh">
       <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-2">
             <StripeWordmark className="h-5 w-auto" />
-            {eventTheme && (
+            {eventTheme && EventThemeIcon && (
               <>
                 <span className="hidden h-4 w-px bg-border sm:block" />
                 <span className="hidden items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground sm:flex">
-                  <span aria-hidden>{eventTheme.icon}</span>
+                  <EventThemeIcon className="size-3.5 shrink-0" aria-hidden />
                   {eventTheme.title}
                 </span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+            <SessionTimerChip sessionEndsAtIso={sessionClock} />
             <div className="text-right">
               <div className="font-mono text-sm font-semibold text-primary">
                 {score} pts
@@ -215,6 +263,8 @@ export function WorkshopExperience({
           </div>
         </div>
       </header>
+
+      <SessionEndingBanner sessionEndsAtIso={sessionClock} />
 
       {activeWaves.length > 0 ? (
         <div className="border-b border-destructive/40 bg-destructive/10">

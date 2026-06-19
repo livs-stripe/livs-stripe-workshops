@@ -2,32 +2,22 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { findEventByCode, joinEvent } from '@/app/actions/participant'
+import { joinEvent } from '@/app/actions/participant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CodeInput } from '@/components/participant/code-input'
-import { getTheme } from '@/lib/themes'
-import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
-
-type FoundEvent = {
-  id: string
-  name: string
-  description: string | null
-  status: string
-  eventType: string
-  eventTheme: string
-}
+import { ArrowRight, Loader2 } from 'lucide-react'
 
 export function JoinFlow() {
   const router = useRouter()
   const [code, setCode] = useState('')
-  const [event, setEvent] = useState<FoundEvent | null>(null)
+  const [email, setEmail] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [checking, startCheck] = useTransition()
   const [joining, startJoin] = useTransition()
 
-  function handleCheck(e: React.FormEvent) {
+  function handleJoin(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     const normalized = code.trim().toUpperCase()
@@ -35,25 +25,12 @@ export function JoinFlow() {
       setError('Access codes are 6 characters.')
       return
     }
-    startCheck(async () => {
-      const found = await findEventByCode(normalized)
-      if (!found) {
-        setError('No session found for that code. Check with your facilitator.')
-        return
-      }
-      if (found.status === 'ended') {
-        setError('That session has already ended.')
-        return
-      }
-      setEvent(found)
-    })
-  }
-
-  function handleJoin(formData: FormData) {
-    setError(null)
-    formData.set('code', code.trim().toUpperCase())
+    const fd = new FormData()
+    fd.set('code', normalized)
+    fd.set('email', email.trim())
+    if (displayName.trim()) fd.set('name', displayName.trim())
     startJoin(async () => {
-      const result = await joinEvent(formData)
+      const result = await joinEvent(fd)
       if (result?.error) {
         setError(result.error)
         return
@@ -63,90 +40,57 @@ export function JoinFlow() {
     })
   }
 
-  if (event) {
-    return (
-      <form action={handleJoin} className="flex flex-col gap-4">
-        <div className="rounded-lg border border-primary/30 bg-primary/10 p-4">
-          <div className="flex items-center gap-2 text-primary">
-            <CheckCircle2 className="size-4" />
-            <span className="text-sm font-medium">
-              {event.eventType === 'workshop' ? 'Workshop found' : 'Challenge found'}
-            </span>
-          </div>
-          <p className="mt-1 font-semibold text-foreground">{event.name}</p>
-          {getTheme(event.eventTheme) && (
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground">
-              <span aria-hidden>{getTheme(event.eventTheme)!.icon}</span>
-              {getTheme(event.eventTheme)!.title}
-            </span>
-          )}
-          {event.description && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {event.description}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Your name</Label>
-          <Input id="name" name="name" required autoComplete="name" />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">
-              Email <span className="text-muted-foreground">(optional)</span>
-            </Label>
-            <Input id="email" name="email" type="email" autoComplete="email" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="company">
-              Company <span className="text-muted-foreground">(optional)</span>
-            </Label>
-            <Input id="company" name="company" autoComplete="organization" />
-          </div>
-        </div>
-
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setEvent(null)
-              setError(null)
-            }}
-          >
-            Back
-          </Button>
-          <Button type="submit" disabled={joining} className="flex-1">
-            {joining ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> Joining…
-              </>
-            ) : (
-              <>
-                Enter {event?.eventType === 'challenge' ? 'challenge' : 'workshop'}{' '}
-                <ArrowRight className="size-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    )
-  }
-
   return (
-    <form onSubmit={handleCheck} className="flex flex-col gap-4">
+    <form onSubmit={handleJoin} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2.5">
-        <Label className="label-caps text-muted-foreground">Access code</Label>
-        <CodeInput value={code} onChange={setCode} disabled={checking} />
-          <p className="text-xs text-muted-foreground">
-          Enter the 6-character code from your facilitator.
+        <Label className="label-caps text-muted-foreground" htmlFor="access-code">
+          Access code
+        </Label>
+        <CodeInput
+          value={code}
+          onChange={setCode}
+          disabled={joining}
+        />
+        <p className="text-xs text-muted-foreground">
+          From your facilitator (email, Slack, or in the room).
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
+        />
+        <p className="text-xs text-muted-foreground">
+          We use your email only to identify you in this live room. No account is
+          created; session data is not kept for you after the event ends.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="displayName">
+          How you&apos;d like to appear{' '}
+          <span className="text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="displayName"
+          name="name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="First name or nickname"
+          autoComplete="nickname"
+        />
+        <p className="text-xs text-muted-foreground">
+          Shown to your facilitator and on the live roster. If you leave and
+          rejoin with the same email while the session is open, you pick up where
+          you left off in this room—not a saved account.
         </p>
       </div>
 
@@ -156,14 +100,14 @@ export function JoinFlow() {
         </p>
       )}
 
-      <Button type="submit" disabled={checking} size="lg">
-        {checking ? (
+      <Button type="submit" disabled={joining} size="lg">
+        {joining ? (
           <>
-            <Loader2 className="size-4 animate-spin" /> Checking…
+            <Loader2 className="size-4 animate-spin" /> Joining…
           </>
         ) : (
           <>
-            Find my session <ArrowRight className="size-4" />
+            Join session <ArrowRight className="size-4" />
           </>
         )}
       </Button>

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Card } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ import {
   Check,
   Plus,
   Lock,
+  Info,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -93,8 +95,10 @@ export function CreateEventDialog() {
   const [copied, setCopied] = useState(false)
   const [leaderboard, setLeaderboard] = useState(true)
   const [projector, setProjector] = useState(true)
+  const [sessionDuration, setSessionDuration] = useState(120)
 
   const selectedTheme = getTheme(theme)
+  const SelectedThemeIcon = selectedTheme?.Icon
 
   function reset() {
     setStep('type')
@@ -105,6 +109,7 @@ export function CreateEventDialog() {
     setCopied(false)
     setLeaderboard(true)
     setProjector(true)
+    setSessionDuration(120)
   }
 
   function handleOpenChange(next: boolean) {
@@ -216,6 +221,7 @@ export function CreateEventDialog() {
             </DialogHeader>
             <div className="grid max-h-[55vh] gap-3 overflow-y-auto py-1 pr-1 sm:grid-cols-2">
               {THEMES.map((t) => {
+                const ThemeIcon = t.Icon
                 const available = t.status === 'available'
                 const selected = theme === t.id
                 return (
@@ -237,8 +243,11 @@ export function CreateEventDialog() {
                     ].join(' ')}
                   >
                     <div className="flex w-full items-start justify-between">
-                      <span aria-hidden className="text-2xl">
-                        {t.icon}
+                      <span
+                        aria-hidden
+                        className="flex size-10 items-center justify-center rounded-md bg-secondary text-primary"
+                      >
+                        <ThemeIcon className="size-5" />
                       </span>
                       {available ? (
                         <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
@@ -318,7 +327,12 @@ export function CreateEventDialog() {
                 </button>
                 <span className="text-muted-foreground">·</span>
                 <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                  <span aria-hidden>{selectedTheme?.icon}</span>
+                  {SelectedThemeIcon && (
+                    <SelectedThemeIcon
+                      className="size-3.5 text-primary"
+                      aria-hidden
+                    />
+                  )}
                   {selectedTheme?.title}
                 </span>
                 <button
@@ -340,8 +354,8 @@ export function CreateEventDialog() {
                   required
                   placeholder={
                     eventType === 'workshop'
-                      ? 'Acme Co — Radar Onboarding'
-                      : 'Q3 Radar Challenge'
+                      ? 'Acme Co — payments workshop'
+                      : 'Q3 team challenge'
                   }
                 />
               </div>
@@ -392,19 +406,62 @@ export function CreateEventDialog() {
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="durationMinutes">Duration (minutes)</Label>
-                  <Input
-                    id="durationMinutes"
-                    name="durationMinutes"
-                    type="number"
-                    inputMode="numeric"
-                    min={5}
-                    max={480}
-                    step={5}
-                    defaultValue={eventType === 'workshop' ? 90 : 60}
-                    required
-                  />
+                <input type="hidden" name="durationMinutes" value={sessionDuration} />
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-4">
+                <Label>Session duration</Label>
+                <p className="text-xs text-muted-foreground">
+                  The event automatically closes when the timer runs out.
+                  Participants will be shown an end screen.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[
+                    { m: 30, label: '30 min' },
+                    { m: 60, label: '1 hour' },
+                    { m: 120, label: '2 hours' },
+                    { m: 180, label: '3 hours' },
+                    { m: 240, label: '4 hours' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.m}
+                      type="button"
+                      onClick={() => setSessionDuration(opt.m)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        sessionDuration === opt.m
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Label htmlFor="customDuration" className="text-xs">
+                      Custom (minutes)
+                    </Label>
+                    <Input
+                      id="customDuration"
+                      type="number"
+                      inputMode="numeric"
+                      min={5}
+                      max={480}
+                      step={5}
+                      placeholder="e.g. 150"
+                      onChange={(e) => {
+                        const v = Number(e.target.value)
+                        if (Number.isInteger(v) && v >= 5 && v <= 480) {
+                          setSessionDuration(v)
+                        }
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:pb-2">
+                    Selected: <span className="font-mono text-foreground">{sessionDuration}</span>{' '}
+                    minutes
+                  </p>
                 </div>
               </div>
 
@@ -551,6 +608,15 @@ export function CreateEventDialog() {
                 {copied ? 'Copied' : 'Copy'}
               </Button>
             </div>
+            <Card className="flex gap-3 border-info/30 bg-info/5 p-4">
+              <Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
+              <p className="text-left text-xs leading-relaxed text-muted-foreground">
+                Participant data for this event is stored for{' '}
+                <span className="font-medium text-foreground">30 days</span>, then
+                automatically deleted. Export participant records from the session
+                console before then if you need them.
+              </p>
+            </Card>
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>
                 Done

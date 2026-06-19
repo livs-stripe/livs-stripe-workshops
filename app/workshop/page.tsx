@@ -3,14 +3,24 @@ import { getCurrentParticipant } from '@/app/actions/participant'
 import { WorkshopExperience } from '@/components/participant/workshop-experience'
 import { WorkshopDocument } from '@/components/participant/workshop-document'
 import { WorkshopHolding } from '@/components/participant/workshop-holding'
+import { SessionEndedChallenge, SessionEndedWorkshop } from '@/components/participant/session-ended'
 import { isAvailableTheme } from '@/lib/themes'
+import { getSessionEndsAt } from '@/lib/event-retention'
+import { INSTRUCTOR_NAME } from '@/lib/instructor-auth'
 
 export default async function WorkshopPage() {
   const data = await getCurrentParticipant()
   if (!data) redirect('/')
 
-  // Safety net: only themes with real content can render. Everything else
-  // shows a holding page until its content ships.
+  const sessionEndsAt = getSessionEndsAt(data.event).toISOString()
+  const eventTiming = {
+    status: data.event.status,
+    eventType: data.event.eventType,
+    sessionEndsAt,
+    createdAt: data.event.createdAt.toISOString(),
+    durationMinutes: data.event.durationMinutes,
+  }
+
   if (!isAvailableTheme(data.event.eventTheme)) {
     return (
       <WorkshopHolding
@@ -20,7 +30,15 @@ export default async function WorkshopPage() {
     )
   }
 
-  // Document-style workshop experience (no scoring / leaderboard).
+  if (data.event.eventType === 'workshop' && data.event.status === 'ended') {
+    return (
+      <SessionEndedWorkshop
+        eventName={data.event.name}
+        facilitatorName={INSTRUCTOR_NAME}
+      />
+    )
+  }
+
   if (data.event.eventType === 'workshop') {
     return (
       <WorkshopDocument
@@ -35,13 +53,26 @@ export default async function WorkshopPage() {
             description: data.event.description,
             customerName: data.event.customerName,
             eventTheme: data.event.eventTheme,
+            ...eventTiming,
           },
           wsProgress: data.wsProgress.map((p) => ({
             moduleId: p.moduleId,
             moduleDone: p.moduleDone,
             completedSteps: safeParseSteps(p.completedSteps),
           })),
+          facilitatorName: INSTRUCTOR_NAME,
         }}
+      />
+    )
+  }
+
+  if (data.event.status === 'ended' && data.finalRoster) {
+    return (
+      <SessionEndedChallenge
+        eventName={data.event.name}
+        roster={data.finalRoster}
+        myId={data.participant.id}
+        myScore={data.participant.score}
       />
     )
   }
@@ -58,7 +89,9 @@ export default async function WorkshopPage() {
       name: data.event.name,
       description: data.event.description,
       status: data.event.status,
+      eventType: data.event.eventType,
       eventTheme: data.event.eventTheme,
+      ...eventTiming,
     },
     progress: data.progress.map((p) => ({
       moduleId: p.moduleId,

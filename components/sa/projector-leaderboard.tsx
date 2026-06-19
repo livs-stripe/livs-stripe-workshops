@@ -44,7 +44,7 @@ export function ProjectorLeaderboard({ initialData }: { initialData: Detail }) {
       <header className="leaderboard-gradient">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-6">
           <div className="flex items-center gap-3">
-            <StripeWordmark className="h-7 w-auto text-white" />
+            <StripeWordmark variant="white" className="h-7 w-auto" />
             <span className="h-5 w-px bg-white/30" />
             <span className="label-caps text-white/80">Live Leaderboard</span>
           </div>

@@ -14,10 +14,18 @@ import { revalidatePath } from 'next/cache'
 import { newId } from '@/lib/id'
 import { getModule, MODULES } from '@/lib/workshop-content'
 import { WORKSHOP_MODULES } from '@/lib/workshop-modules'
+import { autoEndExpiredEvents } from '@/lib/event-lifecycle'
+import { getSessionEndsAt } from '@/lib/event-retention'
 
 const COOKIE = 'participant_id'
 
+function cookieMaxAgeSeconds(sessionEndsAt: Date) {
+  const sec = Math.ceil((sessionEndsAt.getTime() - Date.now()) / 1000)
+  return Math.min(Math.max(sec, 60), 60 * 60 * 24 * 7)
+}
+
 export async function findEventByCode(code: string) {
+  await autoEndExpiredEvents()
   const normalized = code.trim().toUpperCase()
   if (normalized.length !== 6) return null
   const [event] = await db
@@ -28,6 +36,9 @@ export async function findEventByCode(code: string) {
       status: events.status,
       eventType: events.eventType,
       eventTheme: events.eventTheme,
+      sessionEndsAt: events.sessionEndsAt,
+      durationMinutes: events.durationMinutes,
+      createdAt: events.createdAt,
     })
     .from(events)
     .where(eq(events.accessCode, normalized))
@@ -36,40 +47,79 @@ export async function findEventByCode(code: string) {
 }
 
 export async function joinEvent(formData: FormData) {
+  await autoEndExpiredEvents()
   const code = String(formData.get('code') ?? '').trim().toUpperCase()
-  const name = String(formData.get('name') ?? '').trim()
-  const email = String(formData.get('email') ?? '').trim()
-  const company = String(formData.get('company') ?? '').trim()
+  const nameRaw = String(formData.get('name') ?? '').trim()
+  const emailRaw = String(formData.get('email') ?? '').trim().toLowerCase()
 
-  if (!name) return { error: 'Please enter your name.' }
+  if (!emailRaw || !emailRaw.includes('@')) {
+    return { error: 'Please enter a valid email address.' }
+  }
 
   const event = await findEventByCode(code)
-  if (!event) return { error: 'No workshop found for that access code.' }
+  if (!event) return { error: 'No session found for that access code.' }
   if (event.status === 'ended')
-    return { error: 'This workshop has already ended.' }
+    return { error: 'This session has already ended.' }
 
-  // Enforce the workshop capacity set by the instructor.
+  const fullEvent = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, event.id))
+    .limit(1)
+    .then((r) => r[0])
+  if (!fullEvent) return { error: 'No session found for that access code.' }
+
+  const sessionEndsAt = getSessionEndsAt(fullEvent)
+  if (sessionEndsAt.getTime() <= Date.now()) {
+    return { error: 'This session has already ended.' }
+  }
+
+  const displayName =
+    nameRaw ||
+    emailRaw.split('@')[0]?.slice(0, 80) ||
+    'Participant'
+
+  const [existing] = await db
+    .select()
+    .from(participants)
+    .where(
+      and(
+        eq(participants.eventId, event.id),
+        sql`LOWER(TRIM(${participants.email})) = ${emailRaw}`,
+      ),
+    )
+    .limit(1)
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(participants)
+    .where(eq(participants.eventId, event.id))
+
   const [capacityRow] = await db
     .select({ maxParticipants: events.maxParticipants })
     .from(events)
     .where(eq(events.id, event.id))
     .limit(1)
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(participants)
-    .where(eq(participants.eventId, event.id))
-  if (capacityRow && count >= capacityRow.maxParticipants) {
-    return { error: 'This workshop is full. Ask your instructor for help.' }
+
+  if (!existing && capacityRow && count >= capacityRow.maxParticipants) {
+    return { error: 'This session is full. Ask your facilitator for help.' }
   }
 
-  const id = newId('pt')
-  await db.insert(participants).values({
-    id,
-    eventId: event.id,
-    name,
-    email: email || null,
-    company: company || null,
-  })
+  const id = existing?.id ?? newId('pt')
+  if (!existing) {
+    await db.insert(participants).values({
+      id,
+      eventId: event.id,
+      name: displayName,
+      email: emailRaw,
+      company: null,
+    })
+  } else {
+    await db
+      .update(participants)
+      .set({ name: displayName, lastActiveAt: new Date() })
+      .where(eq(participants.id, id))
+  }
 
   const jar = await cookies()
   jar.set(COOKIE, id, {
@@ -77,13 +127,14 @@ export async function joinEvent(formData: FormData) {
     sameSite: 'none',
     secure: true,
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: cookieMaxAgeSeconds(sessionEndsAt),
   })
 
   return { ok: true, participantId: id }
 }
 
 export async function getCurrentParticipant() {
+  await autoEndExpiredEvents()
   const jar = await cookies()
   const id = jar.get(COOKIE)?.value
   if (!id) return null
@@ -119,18 +170,31 @@ export async function getCurrentParticipant() {
     .from(workshopProgress)
     .where(eq(workshopProgress.participantId, id))
 
-  return { participant, event, progress, waves, wsProgress }
+  let finalRoster:
+    | { id: string; name: string; score: number; currentModule: number }[]
+    | undefined
+  if (event.status === 'ended' && event.eventType === 'challenge') {
+    finalRoster = await db
+      .select({
+        id: participants.id,
+        name: participants.name,
+        score: participants.score,
+        currentModule: participants.currentModule,
+      })
+      .from(participants)
+      .where(eq(participants.eventId, event.id))
+      .orderBy(desc(participants.score), participants.joinedAt)
+  }
+
+  return { participant, event, progress, waves, wsProgress, finalRoster }
 }
 
-// Persist a participant's progress through a single Workshop module. Stores the
-// set of completed step indices and whether the whole module is done, then
-// advances the participant's currentModule pointer to the count of done modules
-// so the SA console's progress metrics stay accurate.
 export async function saveWorkshopProgress(input: {
   moduleId: string
   completedSteps: number[]
   moduleDone: boolean
 }) {
+  await autoEndExpiredEvents()
   const jar = await cookies()
   const participantId = jar.get(COOKIE)?.value
   if (!participantId) return { error: 'Session expired. Please rejoin.' }
@@ -141,6 +205,15 @@ export async function saveWorkshopProgress(input: {
     .where(eq(participants.id, participantId))
     .limit(1)
   if (!participant) return { error: 'Session expired. Please rejoin.' }
+
+  const [ev] = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, participant.eventId))
+    .limit(1)
+  if (!ev || ev.status === 'ended') {
+    return { error: 'This session has ended.' }
+  }
 
   const known = WORKSHOP_MODULES.find((m) => m.id === input.moduleId)
   if (!known) return { error: 'Unknown module.' }
@@ -180,7 +253,6 @@ export async function saveWorkshopProgress(input: {
     })
   }
 
-  // Count completed modules to drive the SA progress view.
   const all = await db
     .select({ moduleDone: workshopProgress.moduleDone })
     .from(workshopProgress)
@@ -206,6 +278,7 @@ export async function submitModule(
   moduleId: string,
   answers: Record<string, string>,
 ) {
+  await autoEndExpiredEvents()
   const jar = await cookies()
   const participantId = jar.get(COOKIE)?.value
   if (!participantId) return { error: 'Session expired. Please rejoin.' }
@@ -217,10 +290,18 @@ export async function submitModule(
     .limit(1)
   if (!participant) return { error: 'Session expired. Please rejoin.' }
 
+  const [ev] = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, participant.eventId))
+    .limit(1)
+  if (!ev || ev.status === 'ended') {
+    return { error: 'This session has ended.' }
+  }
+
   const mod = getModule(moduleId)
   if (!mod) return { error: 'Unknown module.' }
 
-  // Grade the quiz.
   let correct = 0
   const results: Record<string, boolean> = {}
   for (const q of mod.questions) {
@@ -230,7 +311,6 @@ export async function submitModule(
   }
   const earned = Math.round((correct / mod.questions.length) * mod.points)
 
-  // Upsert progress: only keep the best score per module.
   const [existing] = await db
     .select()
     .from(moduleProgress)
@@ -266,14 +346,12 @@ export async function submitModule(
     })
   }
 
-  // Recompute participant total from best-per-module scores.
   const allProgress = await db
     .select({ score: moduleProgress.score })
     .from(moduleProgress)
     .where(eq(moduleProgress.participantId, participantId))
   const total = allProgress.reduce((s, r) => s + r.score, 0)
 
-  // Advance the current module pointer.
   const nextModule = Math.min(
     MODULES.length,
     Math.max(participant.currentModule, mod.order),

@@ -19,6 +19,7 @@ export default async function ThemesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {THEMES.map((theme) => {
+          const ThemeIcon = theme.Icon
           const available = theme.status === 'available'
           const count = counts[theme.id] ?? 0
           return (
@@ -27,8 +28,11 @@ export default async function ThemesPage() {
               className={`flex flex-col gap-3 p-5 ${available ? '' : 'opacity-70'}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <span aria-hidden className="text-3xl">
-                  {theme.icon}
+                <span
+                  aria-hidden
+                  className="flex size-12 items-center justify-center rounded-lg bg-secondary text-primary"
+                >
+                  <ThemeIcon className="size-6" />
                 </span>
                 {available ? (
                   <Badge variant="success">Available now</Badge>

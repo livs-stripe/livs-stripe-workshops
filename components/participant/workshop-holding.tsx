@@ -18,6 +18,7 @@ export function WorkshopHolding({
   const router = useRouter()
   const [leaving, startLeave] = useTransition()
   const theme = getTheme(eventTheme)
+  const ThemeIcon = theme?.Icon
 
   function handleLeave() {
     startLeave(async () => {
@@ -51,9 +52,9 @@ export function WorkshopHolding({
           <h1 className="mt-5 text-balance text-xl font-semibold">
             {eventName}
           </h1>
-          {theme && (
+          {theme && ThemeIcon && (
             <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium">
-              <span aria-hidden>{theme.icon}</span>
+              <ThemeIcon className="size-3.5 shrink-0" aria-hidden />
               {theme.title}
             </span>
           )}

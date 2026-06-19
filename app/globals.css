@@ -64,6 +64,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Color tokens align with Stripe’s public marketing palette (slate navy, blurple,
+ * off-white). See https://stripe.com/newsroom/brand-assets for logo usage.
+ */
 :root {
   color-scheme: light;
   --background: #f6f9fc;
@@ -114,18 +118,26 @@
 }
 
 @layer utilities {
-  /* Stripe dark hero gradient. */
+  /* Dark hero / nav: slate gradient from shared tokens (matches Stripe dashboard navy). */
   .hero-gradient {
-    background-color: #0a2540;
-    background-image: linear-gradient(135deg, #0a2540 0%, #1a3c5e 100%);
+    background-color: var(--sidebar);
+    background-image: linear-gradient(
+      135deg,
+      var(--sidebar) 0%,
+      var(--sidebar-border) 100%
+    );
   }
-  /* Brand gradient — use sparingly on CTAs or banners. */
+  /* Brand accent gradient — blurple to violet; use sparingly (banners, not body text). */
   .brand-gradient {
-    background-image: linear-gradient(135deg, #635bff 0%, #7c3aed 100%);
+    background-image: linear-gradient(135deg, var(--primary) 0%, #7c4dff 100%);
   }
-  /* Leaderboard top banner gradient. */
+  /* Leaderboard header: slate into blurple (projection-friendly contrast). */
   .leaderboard-gradient {
-    background-image: linear-gradient(135deg, #0a2540 0%, #635bff 100%);
+    background-image: linear-gradient(
+      135deg,
+      var(--sidebar) 0%,
+      var(--primary) 100%
+    );
   }
   /* Uppercase caps label, per Stripe spec. */
   .label-caps {
@@ -155,5 +167,10 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading text-foreground;
   }
 }

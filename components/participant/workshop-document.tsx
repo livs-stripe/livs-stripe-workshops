@@ -2,12 +2,18 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { saveWorkshopProgress, leaveWorkshop } from '@/app/actions/participant'
 import { WORKSHOP_MODULES } from '@/lib/workshop-modules'
 import { getTheme } from '@/lib/themes'
 import { WorkshopCallout } from '@/components/participant/workshop-callout'
 import { DashboardGif } from '@/components/participant/dashboard-gif'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
+import { SessionEndedWorkshop } from '@/components/participant/session-ended'
+import {
+  SessionTimerChip,
+  SessionEndingBanner,
+} from '@/components/participant/session-timer'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +37,11 @@ type EventRow = {
   description: string | null
   customerName: string | null
   eventTheme: string
+  status: string
+  eventType: string
+  sessionEndsAt: string
+  createdAt: string
+  durationMinutes: number
 }
 type ProgressRow = {
   moduleId: string
@@ -41,14 +52,32 @@ type InitialData = {
   participant: Participant
   event: EventRow
   wsProgress: ProgressRow[]
+  facilitatorName: string
 }
+
+type LivePayload = {
+  roster: unknown[]
+  waves: unknown[]
+  meId: string
+  event: {
+    id: string
+    name: string
+    status: string
+    eventType: string
+    sessionEndsAt: string
+    createdAt: string
+    durationMinutes: number
+  }
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function WorkshopDocument({ initialData }: { initialData: InitialData }) {
   const router = useRouter()
-  const { participant, event } = initialData
+  const { participant, event, facilitatorName } = initialData
   const eventTheme = getTheme(event.eventTheme)
+  const EventThemeIcon = eventTheme?.Icon
 
-  // Map moduleId -> progress, seeded from the server.
   const [progress, setProgress] = useState<Record<string, ProgressRow>>(() => {
     const m: Record<string, ProgressRow> = {}
     for (const p of initialData.wsProgress) m[p.moduleId] = p
@@ -56,6 +85,26 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
   })
   const [, startSave] = useTransition()
   const [leaving, startLeave] = useTransition()
+
+  const { data: live } = useSWR<LivePayload>('/api/workshop/live', fetcher, {
+    fallbackData: {
+      roster: [],
+      waves: [],
+      meId: participant.id,
+      event: {
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        eventType: event.eventType,
+        sessionEndsAt: event.sessionEndsAt,
+        createdAt: event.createdAt,
+        durationMinutes: event.durationMinutes,
+      },
+    },
+    refreshInterval: 30_000,
+  })
+
+  const sessionClock = live?.event?.sessionEndsAt ?? event.sessionEndsAt
 
   const doneModules = useMemo(
     () =>
@@ -72,6 +121,15 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
     WORKSHOP_MODULES[WORKSHOP_MODULES.length - 1]
   const [selectedId, setSelectedId] = useState(firstIncomplete.id)
   const allDone = doneModules.size === WORKSHOP_MODULES.length
+
+  if (live?.event?.status === 'ended') {
+    return (
+      <SessionEndedWorkshop
+        eventName={live.event.name}
+        facilitatorName={facilitatorName}
+      />
+    )
+  }
 
   const selected = WORKSHOP_MODULES.find((m) => m.id === selectedId)!
   const selectedProgress = progress[selected.id]
@@ -114,7 +172,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
     const nowDone = !current.moduleDone
     persist(selected.id, { ...current, moduleDone: nowDone })
     if (nowDone) {
-      toast.success(`Module ${selected.number} complete`)
+      toast.success(`Module ${selected.number} complete for this session`)
       const next = WORKSHOP_MODULES.find((m) => m.number === selected.number + 1)
       if (next) setTimeout(() => setSelectedId(next.id), 350)
     }
@@ -140,21 +198,22 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-2">
             <StripeWordmark className="h-5 w-auto" />
-            {eventTheme && (
+            {eventTheme && EventThemeIcon && (
               <>
                 <span className="hidden h-4 w-px bg-border sm:block" />
                 <span className="hidden items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground sm:flex">
-                  <span aria-hidden>{eventTheme.icon}</span>
+                  <EventThemeIcon className="size-3.5 shrink-0" aria-hidden />
                   {eventTheme.title}
                 </span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+            <SessionTimerChip sessionEndsAtIso={sessionClock} />
             <div className="text-right">
               <div className="text-sm font-medium">{participant.name}</div>
               <div className="text-[11px] text-muted-foreground">
-                {doneModules.size}/{WORKSHOP_MODULES.length} modules complete
+                {doneModules.size}/{WORKSHOP_MODULES.length} modules this session
               </div>
             </div>
             <Button
@@ -170,8 +229,9 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
         </div>
       </header>
 
+      <SessionEndingBanner sessionEndsAtIso={sessionClock} />
+
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6 lg:flex-row lg:items-start">
-        {/* Module navigation */}
         <aside className="w-full shrink-0 lg:sticky lg:top-20 lg:w-64">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="label-caps text-muted-foreground">Modules</h2>
@@ -197,17 +257,19 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                 >
                   <span className="shrink-0">
                     {done ? (
-                      <Check className="size-4 text-primary" />
+                      <Check className="size-4 text-success" />
+                    ) : isActive ? (
+                      <CircleDot className="size-4 text-primary" />
                     ) : (
-                      <CircleDot className="size-4 text-muted-foreground" />
+                      <Clock className="size-4 text-muted-foreground" />
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {m.number}. {m.title}
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Clock className="size-3" /> {m.estMinutes} min
+                    <span className="block text-xs text-muted-foreground">
+                      ~{m.estMinutes} min
                     </span>
                   </span>
                 </button>
@@ -216,95 +278,71 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
           </nav>
         </aside>
 
-        {/* Module document */}
         <section className="min-w-0 flex-1">
           {allDone ? (
-            <CompletionCard
-              event={event}
-              participantName={participant.name}
-            />
+            <CompletionCard event={event} participantName={participant.name} />
           ) : null}
 
-          <article>
-            <div className="flex items-center gap-2">
+          <article className="prose prose-neutral max-w-none dark:prose-invert">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="font-mono">
-                MODULE {String(selected.number).padStart(2, '0')}
+                Module {selected.number}
               </Badge>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="size-3" /> ~{selected.estMinutes} min
-              </span>
-              {doneModules.has(selected.id) && (
-                <Badge variant="success">
-                  <Check className="mr-1 size-3" /> Done
-                </Badge>
-              )}
+              {doneModules.has(selected.id) ? (
+                <Badge variant="success">Done this session</Badge>
+              ) : null}
             </div>
-            <h1 className="mt-3 text-pretty text-3xl font-semibold tracking-tight">
+            <h1 className="mb-2 text-2xl font-semibold tracking-tight text-foreground">
               {selected.title}
             </h1>
-            <p className="mt-3 text-pretty text-base leading-relaxed text-muted-foreground">
+            <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
               {selected.intro}
             </p>
 
-            <ol className="mt-8 flex flex-col gap-8">
-              {selected.steps.map((step, idx) => {
-                const stepDone = completedSteps.has(idx)
+            <ol className="flex list-none flex-col gap-8 pl-0">
+              {selected.steps.map((step, si) => {
+                const stepDone = completedSteps.has(si)
                 return (
-                  <li
-                    key={idx}
-                    className="border-l-2 border-border pl-5 [counter-increment:step]"
-                  >
-                    <div className="flex items-start gap-3">
+                  <li key={si} className="rounded-xl border border-border bg-card p-5">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {step.title}
+                      </h3>
                       <button
-                        onClick={() => toggleStep(idx)}
-                        aria-pressed={stepDone}
-                        aria-label={
-                          stepDone ? 'Mark step incomplete' : 'Mark step complete'
-                        }
+                        type="button"
+                        onClick={() => toggleStep(si)}
                         className={[
-                          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border transition-colors',
+                          'flex size-7 shrink-0 items-center justify-center rounded-md border transition-colors',
                           stepDone
                             ? 'border-success bg-success text-success-foreground'
                             : 'border-muted-foreground/40 text-transparent hover:border-primary',
                         ].join(' ')}
+                        aria-pressed={stepDone}
+                        aria-label={
+                          stepDone ? `Mark step ${si + 1} incomplete` : `Mark step ${si + 1} complete`
+                        }
                       >
-                        <Check className="size-3.5" />
+                        <Check className="size-4" />
                       </button>
-                      <h2
-                        className={[
-                          'text-lg font-semibold tracking-tight',
-                          stepDone ? 'text-muted-foreground line-through' : '',
-                        ].join(' ')}
-                      >
-                        {step.title}
-                      </h2>
                     </div>
-
-                    {step.body && (
-                      <p className="mt-2 pl-9 text-pretty text-sm leading-relaxed text-foreground/90">
+                    {step.body ? (
+                      <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
                         {step.body}
                       </p>
-                    )}
-
-                    {step.gif && (
-                      <div className="mt-4 pl-9">
-                        <DashboardGif gif={step.gif} />
-                      </div>
-                    )}
-
-                    {step.callouts && step.callouts.length > 0 && (
-                      <div className="mt-4 flex flex-col gap-3 pl-9">
+                    ) : null}
+                    {step.gif ? <DashboardGif gif={step.gif} /> : null}
+                    {step.callouts?.length ? (
+                      <div className="mt-4 flex flex-col gap-3">
                         {step.callouts.map((c, ci) => (
                           <WorkshopCallout key={ci} callout={c} />
                         ))}
                       </div>
-                    )}
+                    ) : null}
                   </li>
                 )
               })}
             </ol>
 
-            {/* Module completion */}
             <Card className="mt-8 flex flex-wrap items-center justify-between gap-4 border-primary/30 p-5">
               <label className="flex cursor-pointer items-center gap-3">
                 <button
@@ -319,20 +357,17 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                 >
                   <Check className="size-4" />
                 </button>
-                <span className="text-sm font-medium">
-                  {selected.doneLabel}
-                </span>
+                <span className="text-sm font-medium">{selected.doneLabel}</span>
               </label>
             </Card>
 
-            {/* Prev / next navigation */}
             <div className="mt-6 flex items-center justify-between gap-3">
               {prevModule ? (
                 <Button
                   variant="outline"
                   onClick={() => setSelectedId(prevModule.id)}
                 >
-                  <ArrowLeft className="size-4" /> Previous
+                  <ArrowLeft className="size-4" /> Earlier module
                 </Button>
               ) : (
                 <span />
@@ -364,13 +399,12 @@ function CompletionCard({
       <div className="flex items-center gap-2 text-primary">
         <PartyPopper className="size-5" />
         <h2 className="text-xl font-semibold tracking-tight">
-          Workshop complete
+          All modules complete this session
         </h2>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Nice work, {participantName}. You worked through all{' '}
-        {WORKSHOP_MODULES.length} modules of {event.name}. Here&apos;s what you
-        built today:
+        Nice work, {participantName}. You worked through all {WORKSHOP_MODULES.length}{' '}
+        modules in {event.name} during this live session.
       </p>
       <ul className="mt-4 grid gap-2">
         {WORKSHOP_MODULES.map((m) => (
@@ -383,9 +417,9 @@ function CompletionCard({
       <div className="mt-5 flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm">
         <Mail className="size-4 shrink-0 text-muted-foreground" />
         <span className="text-muted-foreground">
-          Your Stripe test account remains active after the workshop. Questions?
-          Reach out to your facilitator
-          {event.customerName ? ` at ${event.customerName}` : ''}.
+          This was a temporary session room—no workshop profile is saved for you.
+          Questions? Contact your facilitator
+          {event.customerName ? ` (${event.customerName})` : ''}.
         </span>
       </div>
     </Card>

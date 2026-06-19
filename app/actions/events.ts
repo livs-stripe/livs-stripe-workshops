@@ -2,12 +2,17 @@
 
 import { db } from '@/lib/db'
 import { events, participants, attackWaves, moduleProgress } from '@/lib/db/schema'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { newId, newAccessCode } from '@/lib/id'
 import { getAttackWaveType } from '@/lib/workshop-content'
 import { requireInstructor } from '@/lib/instructor-auth'
 import { isAvailableTheme } from '@/lib/themes'
+import { autoEndExpiredEvents } from '@/lib/event-lifecycle'
+import {
+  getSessionEndsAt,
+  isParticipantDataExpired,
+} from '@/lib/event-retention'
 import {
   provisionAccountsForEvent,
   provisionSlotsForEvent,
@@ -19,8 +24,13 @@ async function getUserId() {
   return requireInstructor()
 }
 
+const THIRTY_DAYS_AGO = () =>
+  new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
 export async function getEvents() {
+  await autoEndExpiredEvents()
   const userId = await getUserId()
+  const cutoff = THIRTY_DAYS_AGO()
   const rows = await db
     .select({
       id: events.id,
@@ -32,18 +42,48 @@ export async function getEvents() {
       eventTheme: events.eventTheme,
       customerName: events.customerName,
       createdAt: events.createdAt,
+      endedAt: events.endedAt,
+      sessionEndsAt: events.sessionEndsAt,
+      durationMinutes: events.durationMinutes,
       participantCount: sql<number>`count(${participants.id})::int`,
     })
     .from(events)
     .leftJoin(participants, eq(participants.eventId, events.id))
-    .where(eq(events.saUserId, userId))
+    .where(
+      and(
+        eq(events.saUserId, userId),
+        or(
+          eq(events.status, 'active'),
+          and(
+            eq(events.status, 'ended'),
+            gte(sql`COALESCE(${events.endedAt}, ${events.createdAt})`, cutoff),
+          ),
+        ),
+      ),
+    )
     .groupBy(events.id)
     .orderBy(desc(events.createdAt))
   return rows
 }
 
+/** Active sessions and lifetime event count for the SA dashboard header. */
+export async function getDashboardCounts() {
+  await autoEndExpiredEvents()
+  const userId = await getUserId()
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(events)
+    .where(eq(events.saUserId, userId))
+  const [{ active }] = await db
+    .select({ active: sql<number>`count(*)::int` })
+    .from(events)
+    .where(and(eq(events.saUserId, userId), eq(events.status, 'active')))
+  return { totalEvents: total, activeEvents: active }
+}
+
 // Count events per theme for the current SA — powers the Themes reference page.
 export async function getThemeCounts() {
+  await autoEndExpiredEvents()
   const userId = await getUserId()
   const rows = await db
     .select({
@@ -107,6 +147,7 @@ export async function createEvent(formData: FormData) {
   }
 
   const id = newId('evt')
+  const sessionEndsAt = new Date(Date.now() + durationMinutes * 60 * 1000)
   await db.insert(events).values({
     id,
     name,
@@ -117,6 +158,7 @@ export async function createEvent(formData: FormData) {
     eventTheme,
     maxParticipants,
     durationMinutes,
+    sessionEndsAt,
     customerName: customerName || null,
     customerEmail: customerEmail || null,
     facilitatorNotes: facilitatorNotes || null,
@@ -136,6 +178,7 @@ export async function createEvent(formData: FormData) {
 }
 
 export async function getEventDetail(eventId: string) {
+  await autoEndExpiredEvents()
   const userId = await getUserId()
   const [event] = await db
     .select()
@@ -175,10 +218,13 @@ export async function getEventDetail(eventId: string) {
         : null,
   }))
 
-  return { event, roster, waves, accounts }
+  const participantDataExpired = isParticipantDataExpired(event.endedAt)
+
+  return { event, roster, waves, accounts, participantDataExpired }
 }
 
 export async function fireAttackWave(eventId: string, waveType: string) {
+  await autoEndExpiredEvents()
   const userId = await getUserId()
   // Verify ownership.
   const [event] = await db
@@ -203,13 +249,111 @@ export async function fireAttackWave(eventId: string, waveType: string) {
 }
 
 export async function setEventStatus(eventId: string, status: 'active' | 'ended') {
+  await autoEndExpiredEvents()
   const userId = await getUserId()
+  if (status === 'ended') {
+    await db
+      .update(events)
+      .set({
+        status: 'ended',
+        endedAt: sql`COALESCE(${events.endedAt}, NOW())`,
+      })
+      .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+  } else {
+    const [ev] = await db
+      .select({ durationMinutes: events.durationMinutes })
+      .from(events)
+      .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+      .limit(1)
+    const mins = ev?.durationMinutes ?? 120
+    const sessionEndsAt = new Date(Date.now() + mins * 60 * 1000)
+    await db
+      .update(events)
+      .set({
+        status: 'active',
+        endedAt: null,
+        sessionEndsAt,
+      })
+      .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+  }
+  revalidatePath(`/sa/events/${eventId}`)
+  revalidatePath('/sa')
+}
+
+export async function extendEventSession(eventId: string, extraMinutes = 30) {
+  await autoEndExpiredEvents()
+  const userId = await getUserId()
+  const [ev] = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+    .limit(1)
+  if (!ev || ev.status !== 'active') throw new Error('Session is not active')
+  const base = getSessionEndsAt(ev)
+  const next = new Date(
+    Math.max(Date.now(), base.getTime()) + extraMinutes * 60 * 1000,
+  )
   await db
     .update(events)
-    .set({ status })
+    .set({ sessionEndsAt: next })
     .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
   revalidatePath(`/sa/events/${eventId}`)
   revalidatePath('/sa')
+}
+
+export async function endEventNow(eventId: string) {
+  await autoEndExpiredEvents()
+  const userId = await getUserId()
+  await db
+    .update(events)
+    .set({
+      status: 'ended',
+      endedAt: sql`COALESCE(${events.endedAt}, NOW())`,
+    })
+    .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+  revalidatePath(`/sa/events/${eventId}`)
+  revalidatePath('/sa')
+}
+
+export async function exportParticipantsCsv(eventId: string): Promise<string> {
+  await autoEndExpiredEvents()
+  const userId = await getUserId()
+  const [event] = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+    .limit(1)
+  if (!event) throw new Error('Event not found')
+  if (isParticipantDataExpired(event.endedAt)) {
+    throw new Error('Participant data has been deleted for this event.')
+  }
+  const roster = await db
+    .select({
+      email: participants.email,
+      name: participants.name,
+      joinedAt: participants.joinedAt,
+      score: participants.score,
+      currentModule: participants.currentModule,
+    })
+    .from(participants)
+    .where(eq(participants.eventId, eventId))
+    .orderBy(participants.joinedAt)
+
+  const headers = [
+    'email',
+    'display_name',
+    'joined_at',
+    'score',
+    'modules_complete',
+    'event_type',
+  ]
+  const lines = roster.map((p) => {
+    const joined = p.joinedAt.toISOString()
+    const email = (p.email ?? '').replaceAll('"', '""')
+    const name = (p.name ?? '').replaceAll('"', '""')
+    return `"${email}","${name}","${joined}",${p.score},${p.currentModule},"${event.eventType}"`
+  })
+  return `${headers.join(',')}\n${lines.join('\n')}\n`
 }
 
 // Retry provisioning any accounts that previously failed (e.g. before Connect

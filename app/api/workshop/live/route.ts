@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { participants, attackWaves } from '@/lib/db/schema'
+import { participants, attackWaves, events } from '@/lib/db/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { autoEndExpiredEvents } from '@/lib/event-lifecycle'
+import { getSessionEndsAt } from '@/lib/event-retention'
 
-// Returns the live leaderboard for the participant's event plus any active
-// attack waves. Polled by the workshop experience.
+// Live roster, waves, and session clock for the participant's current event.
 export async function GET() {
+  await autoEndExpiredEvents()
   const jar = await cookies()
   const id = jar.get('participant_id')?.value
   if (!id) return NextResponse.json({ error: 'No session' }, { status: 401 })
@@ -17,6 +19,13 @@ export async function GET() {
     .where(eq(participants.id, id))
     .limit(1)
   if (!me) return NextResponse.json({ error: 'No session' }, { status: 401 })
+
+  const [evt] = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, me.eventId))
+    .limit(1)
+  if (!evt) return NextResponse.json({ error: 'No session' }, { status: 401 })
 
   const roster = await db
     .select({
@@ -37,5 +46,20 @@ export async function GET() {
     .orderBy(desc(attackWaves.firedAt))
     .limit(5)
 
-  return NextResponse.json({ roster, waves, meId: id })
+  const sessionEndsAt = getSessionEndsAt(evt)
+
+  return NextResponse.json({
+    roster,
+    waves,
+    meId: id,
+    event: {
+      id: evt.id,
+      name: evt.name,
+      status: evt.status,
+      eventType: evt.eventType,
+      sessionEndsAt: sessionEndsAt.toISOString(),
+      createdAt: evt.createdAt.toISOString(),
+      durationMinutes: evt.durationMinutes,
+    },
+  })
 }

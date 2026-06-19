@@ -4,7 +4,7 @@ import { getCurrentParticipant } from '@/app/actions/participant'
 import { JoinFlow } from '@/components/participant/join-flow'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { BookOpen, Trophy, MonitorPlay } from 'lucide-react'
-import { THEMES, PLATFORM_NAME } from '@/lib/themes'
+import { THEMES, PLATFORM_NAME, PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
 
 export default async function HomePage() {
   const active = await getCurrentParticipant()
@@ -15,10 +15,10 @@ export default async function HomePage() {
       {/* Hero panel */}
       <section className="hero-gradient stripe-texture relative flex flex-col justify-between px-6 py-10 text-white md:px-12 md:py-14">
         <div className="flex items-center gap-3">
-          <StripeWordmark className="h-7 w-auto text-white" />
+          <StripeWordmark variant="white" className="h-7 w-auto" />
           <span className="h-4 w-px bg-white/25" />
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-white/70">
-            Workshop Platform
+            {PLATFORM_LOCKUP_SHORT}
           </span>
         </div>
 
@@ -31,9 +31,9 @@ export default async function HomePage() {
             {PLATFORM_NAME}
           </h1>
           <p className="mt-5 text-pretty text-lg leading-relaxed text-white/70">
-            Guided workshops and live challenges that put you inside a real
-            Stripe Dashboard, led by Stripe Solutions Architects. Enter your
-            access code to join your session.
+            Temporary live rooms for Stripe customers: your Solutions Architect
+            opens a session, you join with a code—no accounts, no history after
+            the room closes.
           </p>
           <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-sm text-white/80">
             <li className="flex items-center gap-2">
@@ -53,15 +53,18 @@ export default async function HomePage() {
           <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-white/40">
             Available topics
           </p>
-          {THEMES.map((theme) => (
+          {THEMES.map((theme) => {
+            const ThemeIcon = theme.Icon
+            return (
             <div
               key={theme.id}
               className="flex items-center justify-between border-t border-white/10 py-2.5 text-sm"
             >
               <span className="flex items-center gap-3">
-                <span aria-hidden className="text-base">
-                  {theme.icon}
-                </span>
+                <ThemeIcon
+                  aria-hidden
+                  className="size-4 shrink-0 text-primary"
+                />
                 <span className="text-white/80">{theme.title}</span>
               </span>
               <span
@@ -74,7 +77,8 @@ export default async function HomePage() {
                 {theme.status === 'available' ? 'Available' : 'Coming soon'}
               </span>
             </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
@@ -92,11 +96,11 @@ export default async function HomePage() {
         <div className="flex flex-1 flex-col justify-center">
           <div className="mx-auto w-full max-w-md">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Enter your access code
+              Join a live session
             </h2>
             <p className="mt-1.5 mb-7 text-pretty text-muted-foreground">
-              Your facilitator will share a 6-character access code. Enter it
-              below to join your session.
+              Enter the access code from your facilitator plus your email. This
+              is a one-time room—not a login and not a saved profile.
             </p>
             <JoinFlow />
           </div>

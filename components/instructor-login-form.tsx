@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
+import { PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
 import { AlertCircle, Lock } from 'lucide-react'
 
 function SubmitButton() {
@@ -27,18 +28,18 @@ export function InstructorLoginForm() {
       <Card className="w-full max-w-md p-8">
         <div className="mb-6">
           <div className="mb-6 flex items-center gap-2.5">
-            <StripeWordmark className="h-6 w-auto" />
+            <StripeWordmark variant="foreground" className="h-6 w-auto" />
             <span className="h-4 w-px bg-border" />
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-primary">
-              Radar Workshop
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-foreground">
+              {PLATFORM_LOCKUP_SHORT}
             </span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Instructor sign in
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Restricted to the workshop facilitator. Sign in to run live fraud
-            drills.
+            For authorized facilitators only. Sign in to create sessions, share
+            access codes, and run the facilitator console.
           </p>
         </div>
 
@@ -79,7 +80,7 @@ export function InstructorLoginForm() {
 
         <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Lock className="size-3" />
-          Single-instructor access. There is no public sign-up.
+          Facilitator-only access. No public sign-up.
         </p>
       </Card>
     </div>

@@ -3,6 +3,16 @@
 // event. Only `fraud_radar` has working content today; the rest are roadmap
 // placeholders surfaced in the creation flow and the SA Themes reference page.
 
+import {
+  type LucideIcon,
+  Shield,
+  CreditCard,
+  Scale,
+  Link2,
+  RefreshCw,
+  Microscope,
+} from 'lucide-react'
+
 export type ThemeId =
   | 'fraud_radar'
   | 'online_payments'
@@ -15,8 +25,8 @@ export type ThemeStatus = 'available' | 'coming_soon'
 
 export type Theme = {
   id: ThemeId
-  /** Emoji used as the theme glyph across the platform. */
-  icon: string
+  /** Visual glyph for the theme in lists and headers. */
+  Icon: LucideIcon
   title: string
   /** Short description shown on selection cards. */
   description: string
@@ -28,7 +38,7 @@ export type Theme = {
 export const THEMES: Theme[] = [
   {
     id: 'fraud_radar',
-    icon: '🛡️',
+    Icon: Shield,
     title: 'Fraud & Radar',
     description:
       'Participants learn to protect a live Stripe account using Radar rules, block lists, 3DS, and dispute management.',
@@ -38,7 +48,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'online_payments',
-    icon: '💳',
+    Icon: CreditCard,
     title: 'Online Payments 101',
     description:
       'Core Stripe payments concepts — PaymentIntents, webhooks, testing, and the payment lifecycle.',
@@ -48,7 +58,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'disputes',
-    icon: '⚖️',
+    Icon: Scale,
     title: 'Disputes & Chargebacks',
     description:
       'Deep dive into the dispute lifecycle, evidence strategy, and prevention.',
@@ -58,7 +68,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'connect',
-    icon: '🔗',
+    Icon: Link2,
     title: 'Stripe Connect',
     description:
       'Building platforms and marketplaces — account types, payouts, and onboarding flows.',
@@ -68,7 +78,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'billing',
-    icon: '🔄',
+    Icon: RefreshCw,
     title: 'Billing & Subscriptions',
     description:
       'Subscription models, invoices, proration, trials, and revenue recovery.',
@@ -78,7 +88,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'radar_for_fraud_teams',
-    icon: '🔬',
+    Icon: Microscope,
     title: 'Radar for Fraud Teams',
     description:
       'Advanced Radar — machine learning, custom models, review queues, and team workflows.',
@@ -101,3 +111,5 @@ export function isAvailableTheme(id: string | null | undefined): boolean {
 
 export const PLATFORM_NAME = 'Stripe Workshop Platform'
 export const PLATFORM_TAGLINE = 'Hands-on learning experiences for Stripe customers'
+/** Short label next to the Stripe wordmark (matches marketing lockup). */
+export const PLATFORM_LOCKUP_SHORT = 'Workshop Platform'

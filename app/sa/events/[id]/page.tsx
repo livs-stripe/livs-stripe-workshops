@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getEventDetail } from '@/app/actions/events'
 import { EventConsole } from '@/components/sa/event-console'
 import { ArrowLeft } from 'lucide-react'
+import { getSessionEndsAt } from '@/lib/event-retention'
 
 export default async function EventDetailPage({
   params,
@@ -13,22 +14,29 @@ export default async function EventDetailPage({
   const detail = await getEventDetail(id)
   if (!detail) notFound()
 
-  // Serialize Date objects to ISO strings for the client console.
+  const { event, participantDataExpired } = detail
+  const sessionEndsAt = getSessionEndsAt(event)
+
   const initialData = {
     event: {
-      id: detail.event.id,
-      name: detail.event.name,
-      description: detail.event.description,
-      accessCode: detail.event.accessCode,
-      status: detail.event.status,
-      eventType: detail.event.eventType,
-      customerName: detail.event.customerName,
-      customerEmail: detail.event.customerEmail,
-      facilitatorNotes: detail.event.facilitatorNotes,
+      id: event.id,
+      name: event.name,
+      description: event.description,
+      accessCode: event.accessCode,
+      status: event.status,
+      eventType: event.eventType,
+      customerName: event.customerName,
+      customerEmail: event.customerEmail,
+      facilitatorNotes: event.facilitatorNotes,
+      sessionEndsAt: sessionEndsAt.toISOString(),
+      endedAt: event.endedAt?.toISOString() ?? null,
+      durationMinutes: event.durationMinutes,
+      createdAt: event.createdAt.toISOString(),
     },
     roster: detail.roster.map((p) => ({
       id: p.id,
       name: p.name,
+      email: p.email,
       company: p.company,
       score: p.score,
       currentModule: p.currentModule,
@@ -42,6 +50,7 @@ export default async function EventDetailPage({
       active: w.active,
     })),
     accounts: detail.accounts,
+    participantDataExpired,
   }
 
   return (

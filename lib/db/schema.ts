@@ -77,7 +77,11 @@ export const events = pgTable('events', {
   // fraud_radar | online_payments | disputes | connect | billing | radar_for_fraud_teams
   eventTheme: text('eventTheme').notNull().default('fraud_radar'),
   maxParticipants: integer('maxParticipants').notNull().default(25),
-  durationMinutes: integer('durationMinutes').notNull().default(60),
+  durationMinutes: integer('durationMinutes').notNull().default(120),
+  /** When the live session automatically closes (may be extended by the SA). */
+  sessionEndsAt: timestamp('sessionEndsAt'),
+  /** Set when the session ends (timer, SA action, or auto-close). */
+  endedAt: timestamp('endedAt'),
   // Customer / facilitator metadata.
   customerName: text('customerName'),
   customerEmail: text('customerEmail'),
