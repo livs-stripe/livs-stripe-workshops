@@ -32,54 +32,64 @@ export async function getEvents() {
   await autoEndExpiredEvents()
   const userId = await getUserId()
   const cutoff = THIRTY_DAYS_AGO()
-  const rows = await db
-    .select({
-      id: events.id,
-      name: events.name,
-      description: events.description,
-      accessCode: events.accessCode,
-      status: events.status,
-      eventType: events.eventType,
-      eventTheme: events.eventTheme,
-      customerName: events.customerName,
-      createdAt: events.createdAt,
-      endedAt: events.endedAt,
-      sessionEndsAt: events.sessionEndsAt,
-      durationMinutes: events.durationMinutes,
-      participantCount: sql<number>`count(${participants.id})::int`,
-    })
-    .from(events)
-    .leftJoin(participants, eq(participants.eventId, events.id))
-    .where(
-      and(
-        eq(events.saUserId, userId),
-        or(
-          eq(events.status, 'active'),
-          and(
-            eq(events.status, 'ended'),
-            gte(sql`COALESCE(${events.endedAt}, ${events.createdAt})`, cutoff),
+  try {
+    const rows = await db
+      .select({
+        id: events.id,
+        name: events.name,
+        description: events.description,
+        accessCode: events.accessCode,
+        status: events.status,
+        eventType: events.eventType,
+        eventTheme: events.eventTheme,
+        customerName: events.customerName,
+        createdAt: events.createdAt,
+        endedAt: events.endedAt,
+        sessionEndsAt: events.sessionEndsAt,
+        durationMinutes: events.durationMinutes,
+        participantCount: sql<number>`count(${participants.id})::int`,
+      })
+      .from(events)
+      .leftJoin(participants, eq(participants.eventId, events.id))
+      .where(
+        and(
+          eq(events.saUserId, userId),
+          or(
+            eq(events.status, 'active'),
+            and(
+              eq(events.status, 'ended'),
+              gte(sql`COALESCE(${events.endedAt}, ${events.createdAt})`, cutoff),
+            ),
           ),
         ),
-      ),
-    )
-    .groupBy(events.id)
-    .orderBy(desc(events.createdAt))
-  return rows
+      )
+      .groupBy(events.id)
+      .orderBy(desc(events.createdAt))
+    return rows
+  } catch (err) {
+    console.error('[getEvents] Query failed — schema may need migration:', err instanceof Error ? err.message : err)
+    return []
+  }
 }
 
 /** Active sessions and lifetime event count for the SA dashboard header. */
 export async function getDashboardCounts() {
   await autoEndExpiredEvents()
-  const userId = await getUserId()
-  const [{ total }] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(events)
-    .where(eq(events.saUserId, userId))
-  const [{ active }] = await db
-    .select({ active: sql<number>`count(*)::int` })
-    .from(events)
-    .where(and(eq(events.saUserId, userId), eq(events.status, 'active')))
-  return { totalEvents: total, activeEvents: active }
+  try {
+    const userId = await getUserId()
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(events)
+      .where(eq(events.saUserId, userId))
+    const [{ active }] = await db
+      .select({ active: sql<number>`count(*)::int` })
+      .from(events)
+      .where(and(eq(events.saUserId, userId), eq(events.status, 'active')))
+    return { totalEvents: total, activeEvents: active }
+  } catch (err) {
+    console.error('[getDashboardCounts] Query failed:', err instanceof Error ? err.message : err)
+    return { totalEvents: 0, activeEvents: 0 }
+  }
 }
 
 // Count events per theme for the current SA — powers the Themes reference page.
