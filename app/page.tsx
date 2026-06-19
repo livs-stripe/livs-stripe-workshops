@@ -9,7 +9,12 @@ import { BookOpen, Trophy, MonitorPlay } from 'lucide-react'
 import { THEMES, PLATFORM_NAME, PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
 
 export default async function HomePage() {
-  const active = await getCurrentParticipant()
+  let active = null
+  try {
+    active = await getCurrentParticipant()
+  } catch {
+    // DB unavailable or no session — render join form
+  }
   if (active) redirect('/workshop')
 
   return (

@@ -11,7 +11,12 @@ import { getSessionEndsAt } from '@/lib/event-retention'
 import { INSTRUCTOR_NAME } from '@/lib/instructor-auth'
 
 export default async function WorkshopPage() {
-  const data = await getCurrentParticipant()
+  let data = null
+  try {
+    data = await getCurrentParticipant()
+  } catch {
+    redirect('/')
+  }
   if (!data) redirect('/')
 
   const sessionEndsAt = getSessionEndsAt(data.event).toISOString()
