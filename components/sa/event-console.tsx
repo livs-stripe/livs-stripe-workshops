@@ -19,6 +19,7 @@ import {
   ConnectedAccountsPanel,
   type ConnectedAccount,
 } from '@/components/sa/connected-accounts-panel'
+import { ReadinessChecklist } from '@/components/sa/readiness-checklist'
 import { toast } from 'sonner'
 import {
   Users,
@@ -65,6 +66,7 @@ type EventRow = {
   customerName: string | null
   customerEmail: string | null
   facilitatorNotes: string | null
+  maxParticipants: number
   sessionEndsAt: string
   endedAt: string | null
   durationMinutes: number
@@ -292,6 +294,14 @@ export function EventConsole({ initialData }: { initialData: Detail }) {
           )}
         </div>
       </Card>
+
+      {event.status === 'active' && (
+        <ReadinessChecklist
+          eventId={event.id}
+          accessCode={event.accessCode}
+          maxParticipants={event.maxParticipants ?? 50}
+        />
+      )}
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { submitModule, leaveWorkshop } from '@/app/actions/participant'
@@ -28,12 +28,18 @@ import {
   ArrowRight,
   Target,
   ShieldAlert,
+  WifiOff,
 } from 'lucide-react'
 import { SessionEndedChallenge } from '@/components/participant/session-ended'
 import {
   SessionTimerChip,
   SessionEndingBanner,
 } from '@/components/participant/session-timer'
+import {
+  isPageVisible,
+  saveSession,
+  resilientFetcher,
+} from '@/lib/client/resilient-fetch'
 
 type Participant = {
   id: string
@@ -84,8 +90,6 @@ type InitialData = {
   waves: Wave[]
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
 export function WorkshopExperience({
   initialData,
 }: {
@@ -108,6 +112,18 @@ export function WorkshopExperience({
   } | null>(null)
   const [pending, startTransition] = useTransition()
   const [leaving, startLeave] = useTransition()
+  const [isConnected, setIsConnected] = useState(true)
+
+  // Persist session for tab-refresh recovery
+  useEffect(() => {
+    if (participant.id && event.id) {
+      saveSession({
+        eventId: event.id,
+        participantEmail: '',
+        participantId: participant.id,
+      })
+    }
+  }, [participant.id, event.id])
 
   const completed = useMemo(
     () =>
@@ -124,23 +140,31 @@ export function WorkshopExperience({
   const selected = getModule(selectedId)!
 
   // Live roster, waves, and session clock (poll ~30s for end-of-session sync).
-  const { data: live } = useSWR<LivePayload>('/api/workshop/live', fetcher, {
-    fallbackData: {
-      roster: [],
-      waves: initialData.waves,
-      meId: participant.id,
-      event: {
-        id: event.id,
-        name: event.name,
-        status: event.status,
-        eventType: event.eventType,
-        sessionEndsAt: event.sessionEndsAt,
-        createdAt: event.createdAt,
-        durationMinutes: event.durationMinutes,
+  // Uses resilient fetcher + visibility-based pausing to handle 50 concurrent participants.
+  const { data: live } = useSWR<LivePayload>(
+    '/api/workshop/live',
+    resilientFetcher,
+    {
+      fallbackData: {
+        roster: [],
+        waves: initialData.waves,
+        meId: participant.id,
+        event: {
+          id: event.id,
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          sessionEndsAt: event.sessionEndsAt,
+          createdAt: event.createdAt,
+          durationMinutes: event.durationMinutes,
+        },
       },
+      refreshInterval: 30_000,
+      refreshWhenHidden: false,
+      onSuccess: () => setIsConnected(true),
+      onError: () => setIsConnected(false),
     },
-    refreshInterval: 30_000,
-  })
+  )
 
   const roster = live?.roster ?? []
   const activeWaves = live?.waves ?? []
@@ -242,6 +266,11 @@ export function WorkshopExperience({
             )}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+            {!isConnected && (
+              <span className="flex items-center gap-1 text-xs text-amber-600">
+                <WifiOff className="size-3" /> Reconnecting...
+              </span>
+            )}
             <SessionTimerChip sessionEndsAtIso={sessionClock} />
             <div className="text-right">
               <div className="font-mono text-sm font-semibold text-primary">

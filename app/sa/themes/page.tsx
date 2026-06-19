@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getThemeCounts } from '@/app/actions/events'
 import { THEMES } from '@/lib/themes'
 import { Card } from '@/components/ui/card'

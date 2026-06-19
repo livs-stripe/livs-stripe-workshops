@@ -16,6 +16,7 @@ import { getModule, MODULES } from '@/lib/workshop-content'
 import { WORKSHOP_MODULES } from '@/lib/workshop-modules'
 import { autoEndExpiredEvents } from '@/lib/event-lifecycle'
 import { getSessionEndsAt } from '@/lib/event-retention'
+import { claimPoolAccount, provisionOnDemand } from '@/lib/stripe-accounts'
 
 const COOKIE = 'participant_id'
 
@@ -107,12 +108,22 @@ export async function joinEvent(formData: FormData) {
 
   const id = existing?.id ?? newId('pt')
   if (!existing) {
+    // Claim a pre-provisioned Stripe account from the pool
+    let stripeAccountId = await claimPoolAccount(event.id, id)
+    if (!stripeAccountId) {
+      // Pool exhausted — provision on demand with retry
+      stripeAccountId = await provisionOnDemand(event.id, emailRaw)
+    }
+
     await db.insert(participants).values({
       id,
       eventId: event.id,
       name: displayName,
       email: emailRaw,
       company: null,
+      stripeAccountId,
+      assignedAt: stripeAccountId ? new Date() : null,
+      provisioningStatus: stripeAccountId ? 'ready' : 'pending',
     })
   } else {
     await db

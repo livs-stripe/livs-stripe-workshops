@@ -16,6 +16,7 @@ import {
 import {
   provisionAccountsForEvent,
   provisionSlotsForEvent,
+  provisionAccountPool,
   dashboardUrlForAccount,
 } from '@/lib/stripe-accounts'
 import { connectedAccounts } from '@/lib/db/schema'
@@ -169,9 +170,17 @@ export async function createEvent(formData: FormData) {
     projectorEnabled,
   })
 
-  // Pre-provision one Stripe Connect account per participant slot so the
-  // instructor can demo each account as a Stripe admin during the session.
-  await provisionAccountsForEvent(id, maxParticipants)
+  // Pre-provision Stripe Connect accounts:
+  // 1. Legacy connected_accounts table (for SA dashboard panel)
+  // 2. Account pool (for participant claiming on join)
+  // Both run async — don't block event creation. Pool uses batches of 5
+  // with 200ms delays to stay under Stripe rate limits for 50 accounts.
+  provisionAccountsForEvent(id, maxParticipants).catch((err) =>
+    console.error('[createEvent] connected_accounts provisioning error:', err),
+  )
+  provisionAccountPool(id, maxParticipants).catch((err) =>
+    console.error('[createEvent] account pool provisioning error:', err),
+  )
 
   revalidatePath('/sa')
   return { id, accessCode, eventType }

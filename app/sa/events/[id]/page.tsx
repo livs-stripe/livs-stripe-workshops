@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getEventDetail } from '@/app/actions/events'
@@ -28,6 +30,7 @@ export default async function EventDetailPage({
       customerName: event.customerName,
       customerEmail: event.customerEmail,
       facilitatorNotes: event.facilitatorNotes,
+      maxParticipants: event.maxParticipants,
       sessionEndsAt: sessionEndsAt.toISOString(),
       endedAt: event.endedAt?.toISOString() ?? null,
       durationMinutes: event.durationMinutes,

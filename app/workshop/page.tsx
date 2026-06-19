@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { getCurrentParticipant } from '@/app/actions/participant'
 import { WorkshopExperience } from '@/components/participant/workshop-experience'

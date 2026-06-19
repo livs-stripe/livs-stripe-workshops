@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { notFound, redirect } from 'next/navigation'
 import { isInstructor } from '@/lib/instructor-auth'
 import { getEventDetail } from '@/app/actions/events'

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getEvents, getDashboardCounts } from '@/app/actions/events'
 import { SaEventList } from '@/components/sa/sa-event-list'
 
