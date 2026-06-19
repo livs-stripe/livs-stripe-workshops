@@ -54,13 +54,16 @@ export async function joinEvent(formData: FormData) {
   const emailRaw = String(formData.get('email') ?? '').trim().toLowerCase()
 
   if (!emailRaw || !emailRaw.includes('@')) {
-    return { error: 'Please enter a valid email address.' }
+    return { error: 'Please enter a valid email address.', code: 'INVALID_EMAIL' }
   }
 
   const event = await findEventByCode(code)
-  if (!event) return { error: 'No session found for that access code.' }
-  if (event.status === 'ended')
-    return { error: 'This session has already ended.' }
+  if (!event) {
+    return { error: "That code didn't match any active session. Check with your facilitator.", code: 'CODE_NOT_FOUND' }
+  }
+  if (event.status === 'ended') {
+    return { error: 'This session has closed. Access codes expire when the session ends.', code: 'EVENT_ENDED' }
+  }
 
   const fullEvent = await db
     .select()
@@ -68,11 +71,13 @@ export async function joinEvent(formData: FormData) {
     .where(eq(events.id, event.id))
     .limit(1)
     .then((r) => r[0])
-  if (!fullEvent) return { error: 'No session found for that access code.' }
+  if (!fullEvent) {
+    return { error: "That code didn't match any active session. Check with your facilitator.", code: 'CODE_NOT_FOUND' }
+  }
 
   const sessionEndsAt = getSessionEndsAt(fullEvent)
   if (sessionEndsAt.getTime() <= Date.now()) {
-    return { error: 'This session has already ended.' }
+    return { error: 'This session has closed. Access codes expire when the session ends.', code: 'EVENT_ENDED' }
   }
 
   const displayName =
@@ -103,7 +108,7 @@ export async function joinEvent(formData: FormData) {
     .limit(1)
 
   if (!existing && capacityRow && count >= capacityRow.maxParticipants) {
-    return { error: 'This session is full. Ask your facilitator for help.' }
+    return { error: 'This session has reached its participant limit. Check with your facilitator.', code: 'SESSION_FULL' }
   }
 
   const id = existing?.id ?? newId('pt')

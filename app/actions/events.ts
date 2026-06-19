@@ -220,26 +220,42 @@ export async function getEventDetail(eventId: string) {
     .where(eq(attackWaves.eventId, eventId))
     .orderBy(desc(attackWaves.firedAt))
 
-  const accountRows = await db
-    .select()
-    .from(connectedAccounts)
-    .where(eq(connectedAccounts.eventId, eventId))
-    .orderBy(connectedAccounts.slotNumber)
+  let accounts: {
+    id: string
+    stripeAccountId: string
+    businessName: string
+    slotNumber: number
+    participantId: string | null
+    status: string
+    errorMessage: string | null
+    errorCode: string | null
+    dashboardUrl: string | null
+  }[] = []
 
-  const accounts = accountRows.map((a) => ({
-    id: a.id,
-    stripeAccountId: a.stripeAccountId,
-    businessName: a.businessName,
-    slotNumber: a.slotNumber,
-    participantId: a.participantId,
-    status: a.status,
-    errorMessage: a.errorMessage,
-    errorCode: a.errorCode,
-    dashboardUrl:
-      a.status === 'active' && a.stripeAccountId
-        ? dashboardUrlForAccount(a.stripeAccountId)
-        : null,
-  }))
+  try {
+    const accountRows = await db
+      .select()
+      .from(connectedAccounts)
+      .where(eq(connectedAccounts.eventId, eventId))
+      .orderBy(connectedAccounts.slotNumber)
+
+    accounts = accountRows.map((a) => ({
+      id: a.id,
+      stripeAccountId: a.stripeAccountId,
+      businessName: a.businessName,
+      slotNumber: a.slotNumber,
+      participantId: a.participantId,
+      status: a.status,
+      errorMessage: a.errorMessage ?? null,
+      errorCode: a.errorCode ?? null,
+      dashboardUrl:
+        a.status === 'active' && a.stripeAccountId
+          ? dashboardUrlForAccount(a.stripeAccountId)
+          : null,
+    }))
+  } catch (err) {
+    console.error('[getEventDetail] Failed to fetch connected accounts:', err instanceof Error ? err.message : err)
+  }
 
   const participantDataExpired = isParticipantDataExpired(event.endedAt)
 

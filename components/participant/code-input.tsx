@@ -1,23 +1,37 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useImperativeHandle, forwardRef } from 'react'
 
 const LENGTH = 6
 
-export function CodeInput({
-  value,
-  onChange,
-  onComplete,
-  disabled,
-}: {
-  value: string
-  onChange: (next: string) => void
-  onComplete?: (code: string) => void
-  disabled?: boolean
-}) {
+export type CodeInputHandle = {
+  clear: () => void
+  focus: () => void
+}
+
+export const CodeInput = forwardRef<
+  CodeInputHandle,
+  {
+    value: string
+    onChange: (next: string) => void
+    onComplete?: (code: string) => void
+    disabled?: boolean
+    hasError?: boolean
+  }
+>(function CodeInput({ value, onChange, onComplete, disabled, hasError }, ref) {
   const refs = useRef<Array<HTMLInputElement | null>>([])
   const chars = Array.from({ length: LENGTH }, (_, i) => value[i] ?? '')
   const allFilled = value.length === LENGTH && !value.includes('')
+
+  useImperativeHandle(ref, () => ({
+    clear() {
+      onChange('')
+      refs.current[0]?.focus()
+    },
+    focus() {
+      refs.current[0]?.focus()
+    },
+  }))
 
   function setChar(index: number, char: string) {
     const sanitized = char.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
@@ -64,6 +78,7 @@ export function CodeInput({
   }
 
   function borderColor(char: string, focused: boolean) {
+    if (hasError) return '#DF1B41'
     if (allFilled) return '#00D924'
     if (focused) return '#635BFF'
     if (char) return '#C4C0FF'
@@ -97,14 +112,18 @@ export function CodeInput({
           }}
           onFocusCapture={(e) => {
             const el = e.currentTarget
-            el.style.borderColor = allFilled ? '#00D924' : '#635BFF'
+            el.style.borderColor = hasError ? '#DF1B41' : allFilled ? '#00D924' : '#635BFF'
             el.style.backgroundColor = 'white'
-            el.style.boxShadow = '0 0 0 3px rgba(99,91,255,0.12)'
+            el.style.boxShadow = hasError
+              ? '0 0 0 3px rgba(223,27,65,0.12)'
+              : '0 0 0 3px rgba(99,91,255,0.12)'
           }}
           onBlurCapture={(e) => {
             const el = e.currentTarget
             const hasValue = el.value !== ''
-            el.style.borderColor = allFilled ? '#00D924' : hasValue ? '#C4C0FF' : '#E3E8EF'
+            el.style.borderColor = hasError
+              ? '#DF1B41'
+              : allFilled ? '#00D924' : hasValue ? '#C4C0FF' : '#E3E8EF'
             el.style.backgroundColor = hasValue ? 'white' : '#FAFAFA'
             el.style.boxShadow = 'none'
           }}
@@ -112,4 +131,4 @@ export function CodeInput({
       ))}
     </div>
   )
-}
+})

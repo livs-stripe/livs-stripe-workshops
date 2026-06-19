@@ -1,41 +1,83 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { joinEvent } from '@/app/actions/participant'
-import { CodeInput } from '@/components/participant/code-input'
+import { CodeInput, type CodeInputHandle } from '@/components/participant/code-input'
 import { Loader2 } from 'lucide-react'
+
+const ERROR_MESSAGES: Record<string, string> = {
+  CODE_NOT_FOUND: "That code didn't match any active session. Check with your facilitator.",
+  EVENT_NOT_STARTED: "This session hasn't started yet. Your facilitator will let you know when it's time to join.",
+  EVENT_ENDED: 'This session has closed. Access codes expire when the session ends.',
+  SESSION_FULL: 'This session has reached its participant limit. Check with your facilitator.',
+}
 
 export function JoinFlow() {
   const router = useRouter()
+  const codeRef = useRef<CodeInputHandle>(null)
   const [code, setCode] = useState('')
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [hasCodeError, setHasCodeError] = useState(false)
   const [joining, startJoin] = useTransition()
 
   const canSubmit = code.trim().length === 6 && email.trim().length > 0
 
+  function handleCodeChange(next: string) {
+    setCode(next)
+    if (hasCodeError) {
+      setHasCodeError(false)
+      setError(null)
+    }
+  }
+
   function handleJoin(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setHasCodeError(false)
+
     const normalized = code.trim().toUpperCase()
     if (normalized.length !== 6) {
       setError('Access codes are 6 characters.')
+      setHasCodeError(true)
       return
     }
+
+    // Validate only alphanumeric
+    if (!/^[A-Z0-9]{6}$/.test(normalized)) {
+      setError('Access codes are 6 letters and numbers.')
+      setHasCodeError(true)
+      codeRef.current?.clear()
+      return
+    }
+
     const fd = new FormData()
     fd.set('code', normalized)
     fd.set('email', email.trim())
     if (displayName.trim()) fd.set('name', displayName.trim())
+
     startJoin(async () => {
-      const result = await joinEvent(fd)
-      if (result?.error) {
-        setError(result.error)
-        return
+      try {
+        const result = await joinEvent(fd)
+        if (result?.error) {
+          const code = (result as { code?: string }).code
+          const msg = code && ERROR_MESSAGES[code] ? ERROR_MESSAGES[code] : result.error
+          setError(msg)
+
+          // Mark code-related errors to show red borders
+          if (code === 'CODE_NOT_FOUND' || code === 'EVENT_ENDED' || code === 'EVENT_NOT_STARTED' || code === 'SESSION_FULL') {
+            setHasCodeError(true)
+            codeRef.current?.clear()
+          }
+          return
+        }
+        router.push('/workshop')
+        router.refresh()
+      } catch {
+        setError('Something went wrong on our end. Wait a moment and try again.')
       }
-      router.push('/workshop')
-      router.refresh()
     })
   }
 
@@ -51,10 +93,21 @@ export function JoinFlow() {
           Access code
         </label>
         <CodeInput
+          ref={codeRef}
           value={code}
-          onChange={setCode}
+          onChange={handleCodeChange}
           disabled={joining}
+          hasError={hasCodeError}
         />
+        {error && (
+          <p
+            className="mt-1 text-[14px]"
+            style={{ color: '#DF1B41' }}
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
       </div>
 
       {/* Email */}
@@ -137,13 +190,6 @@ export function JoinFlow() {
           Shown on the live leaderboard and facilitator view.
         </p>
       </div>
-
-      {/* Error */}
-      {error && (
-        <p className="text-[14px] font-medium text-red-600" role="alert">
-          {error}
-        </p>
-      )}
 
       {/* Submit */}
       <button

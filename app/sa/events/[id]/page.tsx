@@ -13,7 +13,15 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const detail = await getEventDetail(id)
+
+  let detail
+  try {
+    detail = await getEventDetail(id)
+  } catch (err) {
+    console.error('[EventDetailPage] getEventDetail failed:', err instanceof Error ? err.message : err)
+    throw err
+  }
+
   if (!detail) notFound()
 
   const { event, participantDataExpired } = detail
@@ -22,37 +30,37 @@ export default async function EventDetailPage({
   const initialData = {
     event: {
       id: event.id,
-      name: event.name,
-      description: event.description,
+      name: event.name ?? '',
+      description: event.description ?? null,
       accessCode: event.accessCode,
       status: event.status,
       eventType: event.eventType,
-      customerName: event.customerName,
-      customerEmail: event.customerEmail,
-      facilitatorNotes: event.facilitatorNotes,
+      customerName: event.customerName ?? null,
+      customerEmail: event.customerEmail ?? null,
+      facilitatorNotes: event.facilitatorNotes ?? null,
       maxParticipants: event.maxParticipants,
       sessionEndsAt: sessionEndsAt.toISOString(),
       endedAt: event.endedAt?.toISOString() ?? null,
       durationMinutes: event.durationMinutes,
       createdAt: event.createdAt.toISOString(),
     },
-    roster: detail.roster.map((p) => ({
+    roster: (detail.roster ?? []).map((p) => ({
       id: p.id,
       name: p.name,
       email: p.email,
-      company: p.company,
-      score: p.score,
-      currentModule: p.currentModule,
+      company: p.company ?? null,
+      score: p.score ?? 0,
+      currentModule: p.currentModule ?? 0,
       joinedAt: p.joinedAt.toISOString(),
     })),
-    waves: detail.waves.map((w) => ({
+    waves: (detail.waves ?? []).map((w) => ({
       id: w.id,
       waveType: w.waveType,
-      label: w.label,
+      label: w.label ?? w.waveType,
       firedAt: w.firedAt.toISOString(),
       active: w.active,
     })),
-    accounts: detail.accounts,
+    accounts: detail.accounts ?? [],
     participantDataExpired,
   }
 
