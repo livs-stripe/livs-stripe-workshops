@@ -150,8 +150,10 @@ export const connectedAccounts = pgTable('connected_accounts', {
   stripeAccountId: text('stripeAccountId').notNull(),
   businessName: text('businessName').notNull(),
   slotNumber: integer('slotNumber').notNull(),
-  participantId: text('participantId'), // claimed by a participant, or null
-  status: text('status').notNull().default('active'), // active | failed
+  participantId: text('participantId'),
+  status: text('status').notNull().default('active'), // active | failed | terminated
+  errorMessage: text('errorMessage'),
+  errorCode: text('errorCode'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
@@ -175,8 +177,11 @@ export const accountPool = pgTable('account_pool', {
   id: text('id').primaryKey(),
   eventId: text('eventId').notNull(),
   stripeAccountId: text('stripeAccountId').notNull(),
-  status: text('status').notNull().default('available'), // available | assigned | terminated
+  status: text('status').notNull().default('available'), // available | assigned | failed | terminated
+  errorMessage: text('errorMessage'),
+  errorCode: text('errorCode'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
+  terminatedAt: timestamp('terminatedAt'),
 }, (t) => [
   index('idx_account_pool_event_status').on(t.eventId, t.status),
 ])

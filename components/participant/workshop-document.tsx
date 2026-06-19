@@ -11,6 +11,7 @@ import { DashboardGif } from '@/components/participant/dashboard-gif'
 import { DashboardLink } from '@/components/participant/dashboard-link'
 import { NarrativeBlock } from '@/components/participant/narrative-block'
 import { StripeDashboardButton } from '@/components/participant/stripe-dashboard-button'
+import { DdosAttackTrigger } from '@/components/participant/ddos-attack-trigger'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { SessionEndedWorkshop } from '@/components/participant/session-ended'
 import {
@@ -376,6 +377,29 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
                     {step.renderCredentialsCard && (
                       <CredentialsPlaceholder />
+                    )}
+
+                    {step.renderDdosPreview && (
+                      <div className="my-4">
+                        <DdosAttackTrigger
+                          participantId={participant.id}
+                          eventId={event.id}
+                          title="Preview Attack"
+                          description="Run a low-intensity burst to observe the attack pattern before defending."
+                          defaultIntensity="low"
+                          showIntensitySelector={false}
+                          previewMode
+                        />
+                      </div>
+                    )}
+
+                    {step.renderDdosTrigger && (
+                      <div className="my-4">
+                        <DdosAttackTrigger
+                          participantId={participant.id}
+                          eventId={event.id}
+                        />
+                      </div>
                     )}
 
                     {step.gif ? <DashboardGif gif={step.gif} /> : null}

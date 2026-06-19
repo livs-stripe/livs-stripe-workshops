@@ -18,6 +18,8 @@ import {
   provisionSlotsForEvent,
   provisionAccountPool,
   dashboardUrlForAccount,
+  deleteEventAccounts,
+  retryFailedPoolAccounts,
 } from '@/lib/stripe-accounts'
 import { connectedAccounts } from '@/lib/db/schema'
 
@@ -231,6 +233,8 @@ export async function getEventDetail(eventId: string) {
     slotNumber: a.slotNumber,
     participantId: a.participantId,
     status: a.status,
+    errorMessage: a.errorMessage,
+    errorCode: a.errorCode,
     dashboardUrl:
       a.status === 'active' && a.stripeAccountId
         ? dashboardUrlForAccount(a.stripeAccountId)
@@ -278,6 +282,10 @@ export async function setEventStatus(eventId: string, status: 'active' | 'ended'
         endedAt: sql`COALESCE(${events.endedAt}, NOW())`,
       })
       .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+
+    deleteEventAccounts(eventId).catch((err) =>
+      console.error('[setEventStatus] Account cleanup error:', err),
+    )
   } else {
     const [ev] = await db
       .select({ durationMinutes: events.durationMinutes })
@@ -330,6 +338,12 @@ export async function endEventNow(eventId: string) {
       endedAt: sql`COALESCE(${events.endedAt}, NOW())`,
     })
     .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+
+  // Clean up connected accounts asynchronously
+  deleteEventAccounts(eventId).catch((err) =>
+    console.error('[endEventNow] Account cleanup error:', err),
+  )
+
   revalidatePath(`/sa/events/${eventId}`)
   revalidatePath('/sa')
 }
@@ -386,7 +400,11 @@ export async function retryFailedAccounts(eventId: string) {
     .limit(1)
   if (!event) throw new Error('Event not found')
 
-  const failed = await db
+  // Retry failed accounts in the pool (new system)
+  const poolResult = await retryFailedPoolAccounts(eventId)
+
+  // Also retry failed legacy connected_accounts
+  const failedLegacy = await db
     .select({ slotNumber: connectedAccounts.slotNumber })
     .from(connectedAccounts)
     .where(
@@ -395,21 +413,26 @@ export async function retryFailedAccounts(eventId: string) {
         eq(connectedAccounts.status, 'failed'),
       ),
     )
-  if (failed.length === 0) return { created: 0, failed: 0 }
 
-  await db
-    .delete(connectedAccounts)
-    .where(
-      and(
-        eq(connectedAccounts.eventId, eventId),
-        eq(connectedAccounts.status, 'failed'),
-      ),
-    )
+  let legacyResult = { created: 0, failed: 0 }
+  if (failedLegacy.length > 0) {
+    await db
+      .delete(connectedAccounts)
+      .where(
+        and(
+          eq(connectedAccounts.eventId, eventId),
+          eq(connectedAccounts.status, 'failed'),
+        ),
+      )
+    const slots = failedLegacy.map((f) => f.slotNumber)
+    legacyResult = await provisionSlotsForEvent(eventId, slots)
+  }
 
-  const slots = failed.map((f) => f.slotNumber)
-  const result = await provisionSlotsForEvent(eventId, slots)
   revalidatePath(`/sa/events/${eventId}`)
-  return result
+  return {
+    created: poolResult.created + legacyResult.created,
+    failed: poolResult.failed + legacyResult.failed,
+  }
 }
 
 export async function getEventStats(eventId: string) {

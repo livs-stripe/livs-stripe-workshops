@@ -1,5 +1,6 @@
 import 'server-only'
 
+import Stripe from 'stripe'
 import { stripe, stripeWithRetry, idempotencyKey } from '@/lib/stripe'
 import { db } from '@/lib/db'
 import { connectedAccounts, accountPool } from '@/lib/db/schema'
@@ -31,11 +32,25 @@ export function dashboardUrlForAccount(stripeAccountId: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Account provisioning — batched with rate-limit awareness
+// Sequential provisioning with proper error handling and rate limit awareness
 // ---------------------------------------------------------------------------
 
-const BATCH_SIZE = 5
-const BATCH_DELAY_MS = 200
+const PROVISION_DELAY_MS = 250
+
+function extractStripeError(err: unknown): { message: string; code: string; type: string; requestId: string } {
+  if (err instanceof Stripe.errors.StripeError) {
+    return {
+      message: err.message,
+      code: err.code ?? 'unknown',
+      type: err.type,
+      requestId: (err as { requestId?: string }).requestId ?? '',
+    }
+  }
+  if (err instanceof Error) {
+    return { message: err.message, code: 'unknown', type: 'unknown', requestId: '' }
+  }
+  return { message: String(err), code: 'unknown', type: 'unknown', requestId: '' }
+}
 
 async function createOneAccount(
   businessName: string,
@@ -64,8 +79,7 @@ async function createOneAccount(
 
 /**
  * Pre-provision accounts into the account_pool for an event.
- * Called asynchronously when SA starts an event. Processes in batches of 5
- * with 200ms delay between batches to stay under Stripe rate limits.
+ * Sequential creation with 250ms delay to respect Stripe test mode rate limits.
  */
 export async function provisionAccountPool(
   eventId: string,
@@ -74,19 +88,41 @@ export async function provisionAccountPool(
   let created = 0
   let failed = 0
 
-  for (let batchStart = 0; batchStart < count; batchStart += BATCH_SIZE) {
-    const batchEnd = Math.min(batchStart + BATCH_SIZE, count)
-    const batch = Array.from(
-      { length: batchEnd - batchStart },
-      (_, i) => batchStart + i,
-    )
+  for (let i = 0; i < count; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, PROVISION_DELAY_MS))
 
-    await Promise.all(
-      batch.map(async (index) => {
-        const businessName = businessNameForSlot(index + 1)
-        const idemKey = idempotencyKey(eventId, 'pool', String(index))
+    const businessName = businessNameForSlot(i + 1)
+    const idemKey = idempotencyKey(eventId, 'pool', String(i))
+
+    try {
+      const stripeAccountId = await createOneAccount(businessName, idemKey)
+      await db.insert(accountPool).values({
+        id: newId('ap'),
+        eventId,
+        stripeAccountId,
+        status: 'available',
+      })
+      created++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[provision] Failed pool account:', {
+        accountIndex: i,
+        eventId,
+        error: stripeErr.message,
+        errorCode: stripeErr.code,
+        errorType: stripeErr.type,
+        stripeRequestId: stripeErr.requestId,
+      })
+
+      // On rate limit, wait and retry this index once
+      if (err instanceof Stripe.errors.StripeRateLimitError) {
+        const retryAfter = 2000
+        console.warn(`[provision] Rate limited on account ${i} of ${count} — waiting ${retryAfter}ms`)
+        await new Promise((r) => setTimeout(r, retryAfter))
+        // Retry once
         try {
-          const stripeAccountId = await createOneAccount(businessName, idemKey)
+          const retryKey = idempotencyKey(eventId, 'pool-retry', String(i))
+          const stripeAccountId = await createOneAccount(businessName, retryKey)
           await db.insert(accountPool).values({
             id: newId('ap'),
             eventId,
@@ -94,18 +130,71 @@ export async function provisionAccountPool(
             status: 'available',
           })
           created++
-        } catch (err) {
-          console.error(
-            `[provision] Failed pool account index=${index} event=${eventId}:`,
-            err instanceof Error ? err.message : err,
-          )
-          failed++
+          continue
+        } catch (retryErr) {
+          const retryStripeErr = extractStripeError(retryErr)
+          console.error('[provision] Retry also failed:', retryStripeErr.message)
         }
-      }),
-    )
+      }
 
-    if (batchEnd < count) {
-      await new Promise((r) => setTimeout(r, BATCH_DELAY_MS))
+      // Record the failure with actual error details
+      await db.insert(accountPool).values({
+        id: newId('ap'),
+        eventId,
+        stripeAccountId: '',
+        status: 'failed',
+        errorMessage: stripeErr.message,
+        errorCode: stripeErr.code,
+      })
+      failed++
+    }
+  }
+
+  return { created, failed }
+}
+
+/**
+ * Retry only failed accounts in the pool for an event.
+ */
+export async function retryFailedPoolAccounts(
+  eventId: string,
+): Promise<{ created: number; failed: number }> {
+  const failedRows = await db
+    .select({ id: accountPool.id })
+    .from(accountPool)
+    .where(and(eq(accountPool.eventId, eventId), eq(accountPool.status, 'failed')))
+
+  if (failedRows.length === 0) return { created: 0, failed: 0 }
+
+  let created = 0
+  let failed = 0
+
+  for (let i = 0; i < failedRows.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, PROVISION_DELAY_MS))
+
+    const row = failedRows[i]
+    const businessName = businessNameForSlot(i + 1)
+    const idemKey = idempotencyKey(eventId, 'retry', row.id)
+
+    try {
+      const stripeAccountId = await createOneAccount(businessName, idemKey)
+      await db
+        .update(accountPool)
+        .set({ stripeAccountId, status: 'available', errorMessage: null, errorCode: null })
+        .where(eq(accountPool.id, row.id))
+      created++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[provision] Retry failed:', {
+        poolId: row.id,
+        error: stripeErr.message,
+        errorCode: stripeErr.code,
+      })
+      await db
+        .update(accountPool)
+        .set({ errorMessage: stripeErr.message, errorCode: stripeErr.code })
+        .where(eq(accountPool.id, row.id))
+      failed++
     }
   }
 
@@ -115,7 +204,6 @@ export async function provisionAccountPool(
 /**
  * Claim the next available account from the pool for a participant.
  * Uses an atomic UPDATE ... RETURNING to prevent race conditions.
- * Returns the Stripe account ID or null if pool is exhausted.
  */
 export async function claimPoolAccount(
   eventId: string,
@@ -166,10 +254,12 @@ export async function provisionOnDemand(
     })
     return stripeAccountId
   } catch (err) {
-    console.error(
-      `[provision] On-demand failed event=${eventId}:`,
-      err instanceof Error ? err.message : err,
-    )
+    const stripeErr = extractStripeError(err)
+    console.error('[provision] On-demand failed:', {
+      eventId,
+      error: stripeErr.message,
+      errorCode: stripeErr.code,
+    })
     return null
   }
 }
@@ -179,18 +269,107 @@ export async function provisionOnDemand(
  */
 export async function getProvisioningStatus(eventId: string) {
   const rows = await db
-    .select({ status: accountPool.status })
+    .select({ status: accountPool.status, errorMessage: accountPool.errorMessage, errorCode: accountPool.errorCode })
     .from(accountPool)
     .where(eq(accountPool.eventId, eventId))
 
   const available = rows.filter((r) => r.status === 'available').length
   const assigned = rows.filter((r) => r.status === 'assigned').length
+  const failedRows = rows.filter((r) => r.status === 'failed')
   return {
     total: rows.length,
     available,
     assigned,
     ready: available + assigned,
+    failed: failedRows.length,
+    errors: failedRows.map((r) => ({ message: r.errorMessage, code: r.errorCode })),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Account deletion — clean up connected accounts when event ends
+// ---------------------------------------------------------------------------
+
+/**
+ * Delete all connected accounts for an event from Stripe and mark them terminated.
+ */
+export async function deleteEventAccounts(eventId: string): Promise<{ deleted: number; errors: number }> {
+  const rows = await db
+    .select({ id: accountPool.id, stripeAccountId: accountPool.stripeAccountId })
+    .from(accountPool)
+    .where(
+      and(
+        eq(accountPool.eventId, eventId),
+        sql`${accountPool.status} != 'terminated'`,
+        sql`${accountPool.stripeAccountId} != ''`,
+      ),
+    )
+
+  let deleted = 0
+  let errors = 0
+
+  for (const row of rows) {
+    try {
+      await stripeWithRetry(
+        () => stripe.accounts.del(row.stripeAccountId),
+        { context: `delete:${row.stripeAccountId}` },
+      )
+      await db
+        .update(accountPool)
+        .set({ status: 'terminated', terminatedAt: new Date() })
+        .where(eq(accountPool.id, row.id))
+      deleted++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[cleanup] Failed to delete account:', {
+        accountId: row.stripeAccountId,
+        error: stripeErr.message,
+      })
+      await db
+        .update(accountPool)
+        .set({ errorMessage: `Deletion failed: ${stripeErr.message}`, errorCode: stripeErr.code })
+        .where(eq(accountPool.id, row.id))
+      errors++
+    }
+
+    await new Promise((r) => setTimeout(r, 100))
+  }
+
+  // Also handle legacy connected_accounts table
+  const legacyRows = await db
+    .select({ id: connectedAccounts.id, stripeAccountId: connectedAccounts.stripeAccountId })
+    .from(connectedAccounts)
+    .where(
+      and(
+        eq(connectedAccounts.eventId, eventId),
+        eq(connectedAccounts.status, 'active'),
+        sql`${connectedAccounts.stripeAccountId} != ''`,
+      ),
+    )
+
+  for (const row of legacyRows) {
+    try {
+      await stripeWithRetry(
+        () => stripe.accounts.del(row.stripeAccountId),
+        { context: `delete-legacy:${row.stripeAccountId}` },
+      )
+      await db
+        .update(connectedAccounts)
+        .set({ status: 'terminated' })
+        .where(eq(connectedAccounts.id, row.id))
+      deleted++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[cleanup] Failed to delete legacy account:', {
+        accountId: row.stripeAccountId,
+        error: stripeErr.message,
+      })
+      errors++
+    }
+    await new Promise((r) => setTimeout(r, 100))
+  }
+
+  return { deleted, errors }
 }
 
 // ---------------------------------------------------------------------------
@@ -212,14 +391,41 @@ export async function provisionSlotsForEvent(
   let created = 0
   let failed = 0
 
-  for (let i = 0; i < slots.length; i += BATCH_SIZE) {
-    const batch = slots.slice(i, i + BATCH_SIZE)
-    await Promise.all(
-      batch.map(async (slot) => {
-        const businessName = businessNameForSlot(slot)
-        const idemKey = idempotencyKey(eventId, 'slot', String(slot))
+  for (let i = 0; i < slots.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, PROVISION_DELAY_MS))
+
+    const slot = slots[i]
+    const businessName = businessNameForSlot(slot)
+    const idemKey = idempotencyKey(eventId, 'slot', String(slot))
+
+    try {
+      const stripeAccountId = await createOneAccount(businessName, idemKey)
+      await db.insert(connectedAccounts).values({
+        id: newId('ca'),
+        eventId,
+        stripeAccountId,
+        businessName,
+        slotNumber: slot,
+        status: 'active',
+      })
+      created++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[provision] Failed slot:', {
+        slot,
+        eventId,
+        error: stripeErr.message,
+        errorCode: stripeErr.code,
+        errorType: stripeErr.type,
+        stripeRequestId: stripeErr.requestId,
+      })
+
+      // On rate limit, wait and retry once
+      if (err instanceof Stripe.errors.StripeRateLimitError) {
+        await new Promise((r) => setTimeout(r, 2000))
         try {
-          const stripeAccountId = await createOneAccount(businessName, idemKey)
+          const retryKey = idempotencyKey(eventId, 'slot-retry', String(slot))
+          const stripeAccountId = await createOneAccount(businessName, retryKey)
           await db.insert(connectedAccounts).values({
             id: newId('ca'),
             eventId,
@@ -229,25 +435,23 @@ export async function provisionSlotsForEvent(
             status: 'active',
           })
           created++
-        } catch (err) {
-          console.error(
-            `[provision] Failed slot ${slot} event=${eventId}:`,
-            err instanceof Error ? err.message : err,
-          )
-          await db.insert(connectedAccounts).values({
-            id: newId('ca'),
-            eventId,
-            stripeAccountId: '',
-            businessName,
-            slotNumber: slot,
-            status: 'failed',
-          })
-          failed++
+          continue
+        } catch {
+          // Fall through to failure recording
         }
-      }),
-    )
-    if (i + BATCH_SIZE < slots.length) {
-      await new Promise((r) => setTimeout(r, BATCH_DELAY_MS))
+      }
+
+      await db.insert(connectedAccounts).values({
+        id: newId('ca'),
+        eventId,
+        stripeAccountId: '',
+        businessName,
+        slotNumber: slot,
+        status: 'failed',
+        errorMessage: stripeErr.message,
+        errorCode: stripeErr.code,
+      })
+      failed++
     }
   }
 

@@ -361,6 +361,12 @@ export const ATTACK_WAVE_TYPES: AttackWaveType[] = [
     description: 'Automated agents hammering checkout at high volume.',
     defense: 'Deploy bot detection and velocity limits.',
   },
+  {
+    id: 'payment_ddos',
+    label: 'Payment DDoS',
+    description: '100 charges across 5 rotating IPs, 80ms apart. Tests velocity, metadata, and risk score rules simultaneously.',
+    defense: 'Layered velocity rules, metadata IP blocking, and risk score thresholds.',
+  },
 ]
 
 export function getAttackWaveType(id: string): AttackWaveType | undefined {

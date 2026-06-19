@@ -31,9 +31,11 @@ export type WorkshopStep = {
   gif?: WorkshopGif
   callouts?: Callout[]
   dashboardLink?: DashboardUrl
-  /** Special rendering flags for Getting Started module */
+  /** Special rendering flags */
   renderDashboardButton?: boolean
   renderCredentialsCard?: boolean
+  renderDdosPreview?: boolean
+  renderDdosTrigger?: boolean
 }
 
 export type WorkshopModule = {
@@ -354,8 +356,80 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     doneLabel: `I've written velocity rules for cards and IPs, and used metadata syntax`,
   },
   {
-    id: 'custom-lists',
+    id: 'ddos-simulation',
     number: 4,
+    title: 'Under Siege: The Payment DDoS',
+    estMinutes: 15,
+    intro:
+      `A payment DDoS is not a network attack. It is a coordinated flood of fraudulent payment attempts designed to overwhelm your fraud rules, find gaps in your coverage, and get as many charges through as possible before you respond. The attacker does not need every charge to succeed. They need enough to make it worthwhile, and they need to do it fast enough that you cannot react in time.\n\nThe good news is that Radar can stop most of it automatically, if your rules are written correctly. The bad news is that the rules you have written so far are not enough on their own. This module adds the missing layer.`,
+    narrative:
+      `Your engineer just called. Checkout is slowing down across BetFlow. The payments list is filling up with charges faster than you can read them. Someone is hammering the account with dozens of requests per second from rotating IPs and cards. This is a payment DDoS. You have about three minutes before real damage is done.`,
+    overviewAddition: `The first time you face a live attack in progress. Speed matters more than perfection.`,
+    steps: [
+      {
+        title: 'Watch it happen first',
+        body: `Before writing any rules, click Start Attack below and watch what lands in your payments list. Open Payments in your Dashboard and refresh it. You will see charges appearing rapidly.\n\nAfter firing: look at the charges. Notice the amounts, the card types, and in the metadata panel of any individual charge, the source_ip field. That is the signal you are going to use.`,
+        dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
+        renderDdosPreview: true,
+        gif: {
+          caption: 'Record: the Stripe payments list populating rapidly with multiple charges in quick succession.',
+          screen: 'Payments list during burst attack',
+        },
+      },
+      {
+        title: 'Why velocity rules alone are not enough',
+        body: `You already have a velocity rule for IP addresses. But look at the IPs in the charges that just came in. The attacker is rotating across multiple IPs to stay under your threshold. A single IP velocity rule with a limit of 15 per day does not catch this because each IP only fires a fraction of the total volume.`,
+        callouts: [
+          {
+            kind: 'explanation',
+            text: `This is why experienced fraud teams combine velocity rules with risk score rules and metadata rules. Any single rule can be gamed by varying one parameter. Layered rules that each catch a different signal are much harder to route around.`,
+          },
+        ],
+      },
+      {
+        title: 'Add a tighter velocity rule for burst detection',
+        body: `Open Radar Rules and add a new Block rule:\n\ntotal_charges_per_ip_daily > 5 and is_anonymous_ip = true\n\nThis tightens your existing IP velocity threshold specifically for anonymous IPs. The attacker's rotating IPs are all datacenter addresses, which Stripe flags as anonymous. Legitimate customers rarely use anonymous IPs.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
+        gif: {
+          caption: 'Record: adding a tighter velocity rule combining IP count with anonymous IP flag.',
+          screen: 'Radar Rules, adding compound block rule',
+        },
+      },
+      {
+        title: 'Block by metadata source IP',
+        body: `BetFlow passes a source_ip metadata field on every PaymentIntent. The attacker's IPs are in the 198.51.100.x range. Add Block rules for the specific IPs you saw in the preview attack:\n\nBlock if ::source_ip:: = '198.51.100.42'\nBlock if ::source_ip:: = '203.0.113.99'\n\nIn a real incident you would add IPs as you identify them, or use a blocklist that your backend updates automatically.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
+        gif: {
+          caption: 'Record: writing a metadata block rule using double-colon source_ip syntax.',
+          screen: 'Radar Rules, metadata rule editor',
+        },
+      },
+      {
+        title: 'Add a charge frequency rule using risk score',
+        body: `High-volume burst attacks almost always involve cards with elevated risk scores because the cards are either stolen, prepaid, or have unusual transaction histories. Add:\n\nBlock if risk_score > 65 and amount < 5000\n\nThis catches high-risk small charges, which is the signature of a DDoS-style fraud burst, without affecting high-value legitimate transactions.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
+        gif: {
+          caption: 'Record: adding a compound risk score and amount block rule.',
+          screen: 'Radar Rules, new block rule',
+        },
+      },
+      {
+        title: 'Fire the real attack',
+        body: `Your rules are in place. Now fire the full simulation and see how many charges your ruleset blocks.`,
+        renderDdosTrigger: true,
+        callouts: [
+          {
+            kind: 'fraud-fact',
+            text: `In 2023, one mid-sized e-commerce platform experienced a payment DDoS involving 8,400 charge attempts in 11 minutes. Their Radar rules blocked 94% of them automatically. The 6% that got through cost $3,200 before manual intervention. Without the rules, the estimated loss was $53,000.`,
+          },
+        ],
+      },
+    ],
+    doneLabel: `I've defended against a payment DDoS and achieved a block rate above 80%`,
+  },
+  {
+    id: 'custom-lists',
+    number: 5,
     title: 'Custom Lists',
     estMinutes: 8,
     intro:
@@ -425,7 +499,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   },
   {
     id: 'three-d-secure',
-    number: 5,
+    number: 6,
     title: '3D Secure',
     estMinutes: 10,
     intro:
@@ -505,7 +579,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   },
   {
     id: 'disputes',
-    number: 6,
+    number: 7,
     title: 'Handling Disputes',
     estMinutes: 12,
     intro:
@@ -600,7 +674,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   },
   {
     id: 'allow-rules',
-    number: 7,
+    number: 8,
     title: 'Allow Rules & False Positives',
     estMinutes: 10,
     intro:
@@ -683,7 +757,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   },
   {
     id: 'putting-together',
-    number: 8,
+    number: 9,
     title: 'Putting It All Together',
     estMinutes: 8,
     intro:

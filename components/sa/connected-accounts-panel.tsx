@@ -14,6 +14,11 @@ import {
   Search,
   CircleAlert,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
+  KeyRound,
+  Timer,
 } from 'lucide-react'
 
 export type ConnectedAccount = {
@@ -24,6 +29,54 @@ export type ConnectedAccount = {
   participantId: string | null
   status: string
   dashboardUrl: string | null
+  errorMessage?: string | null
+  errorCode?: string | null
+}
+
+function ErrorHelpText({ errorMessage, errorCode }: { errorMessage?: string | null; errorCode?: string | null }) {
+  if (!errorMessage && !errorCode) return null
+
+  const code = errorCode ?? ''
+  const msg = (errorMessage ?? '').toLowerCase()
+
+  if (code === 'rate_limit' || msg.includes('rate limit') || msg.includes('too many requests')) {
+    return (
+      <div className="mt-1.5 flex items-start gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+        <Timer className="mt-0.5 size-3 shrink-0" />
+        <span>Stripe rate limit reached. Click retry — the system will pause between requests this time.</span>
+      </div>
+    )
+  }
+
+  if (code === 'invalid_api_key' || code === 'authentication_error' || msg.includes('authentication') || msg.includes('api key')) {
+    return (
+      <div className="mt-1.5 flex items-start gap-1.5 text-[11px] text-red-700 dark:text-red-400">
+        <KeyRound className="mt-0.5 size-3 shrink-0" />
+        <span>Platform API key is invalid or does not have Connect permissions. Check your STRIPE_PLATFORM_API_KEY environment variable.</span>
+      </div>
+    )
+  }
+
+  if (msg.includes('connect') && (msg.includes('enable') || msg.includes('not enabled'))) {
+    return (
+      <div className="mt-1.5 flex items-start gap-1.5 text-[11px] text-red-700 dark:text-red-400">
+        <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+        <span>
+          Connect is not enabled.{' '}
+          <a
+            href="https://dashboard.stripe.com/settings/connect"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium underline underline-offset-2"
+          >
+            Enable it in Stripe settings
+          </a>
+        </span>
+      </div>
+    )
+  }
+
+  return null
 }
 
 export function ConnectedAccountsPanel({
@@ -36,20 +89,21 @@ export function ConnectedAccountsPanel({
   const [query, setQuery] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [retrying, startRetry] = useTransition()
+  const [failedExpanded, setFailedExpanded] = useState(false)
 
-  const activeCount = accounts.filter((a) => a.status === 'active').length
-  const failedCount = accounts.length - activeCount
+  const activeAccounts = accounts.filter((a) => a.status === 'active' || a.status === 'assigned')
+  const failedAccounts = accounts.filter((a) => a.status === 'failed')
+  const activeCount = activeAccounts.length
+  const failedCount = failedAccounts.length
 
   function handleRetry() {
     startRetry(async () => {
       try {
         const res = await retryFailedAccounts(eventId)
         if (res.failed > 0) {
-          toast.error(
-            `${res.created} created, ${res.failed} still failing. Enable Connect in your Stripe dashboard, then retry.`,
-          )
+          toast.error(`${res.created} provisioned, ${res.failed} still failing.`)
         } else {
-          toast.success(`Provisioned ${res.created} accounts.`)
+          toast.success(`Provisioned ${res.created} accounts successfully.`)
         }
       } catch {
         toast.error('Could not retry provisioning.')
@@ -92,34 +146,60 @@ export function ConnectedAccountsPanel({
       </p>
 
       {failedCount > 0 && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/[0.04] p-3">
-          <p className="flex items-start gap-2 text-xs text-foreground">
-            <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
-            <span>
-              {failedCount} account{failedCount === 1 ? '' : 's'} failed to
-              provision. Enable Connect in your{' '}
-              <a
-                href="https://dashboard.stripe.com/connect/overview"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-primary underline-offset-2 hover:underline"
-              >
-                Stripe dashboard
-              </a>
-              , then retry.
-            </span>
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRetry}
-            disabled={retrying}
+        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/[0.04] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1">
+              <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <CircleAlert className="size-4 shrink-0 text-destructive" />
+                {activeCount} of {accounts.length} accounts provisioned successfully
+              </p>
+              <p className="ml-6 mt-0.5 text-xs text-muted-foreground">
+                {failedCount} account{failedCount === 1 ? '' : 's'} failed. Expand below for details.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRetry}
+              disabled={retrying}
+            >
+              <RefreshCw
+                className={`size-3.5 ${retrying ? 'animate-spin' : ''}`}
+              />
+              {retrying ? 'Retrying…' : `Retry ${failedCount} failed`}
+            </Button>
+          </div>
+
+          {/* Collapsible failed account list */}
+          <button
+            onClick={() => setFailedExpanded(!failedExpanded)}
+            className="mt-3 flex w-full items-center gap-1.5 border-t border-destructive/20 pt-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <RefreshCw
-              className={`size-3.5 ${retrying ? 'animate-spin' : ''}`}
-            />
-            {retrying ? 'Retrying…' : 'Retry provisioning'}
-          </Button>
+            {failedExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+            {failedExpanded ? 'Hide' : 'Show'} failed account details
+          </button>
+
+          {failedExpanded && (
+            <ul className="mt-2 flex flex-col gap-2">
+              {failedAccounts.map((a) => (
+                <li
+                  key={a.id}
+                  className="rounded border border-destructive/20 bg-background px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium">{a.businessName}</span>
+                    <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-[10px] text-destructive">
+                      {a.errorCode || 'unknown'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {a.errorMessage || 'No error details available'}
+                  </p>
+                  <ErrorHelpText errorMessage={a.errorMessage} errorCode={a.errorCode} />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -153,21 +233,25 @@ export function ConnectedAccountsPanel({
                   <p className="truncate text-sm font-medium">
                     {a.businessName}
                   </p>
-                  <button
-                    onClick={() => a.stripeAccountId && copyId(a.stripeAccountId)}
-                    disabled={!a.stripeAccountId}
-                    className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground disabled:cursor-default disabled:hover:text-muted-foreground"
-                  >
-                    {a.stripeAccountId || 'provisioning failed'}
-                    {a.stripeAccountId &&
-                      (copied === a.stripeAccountId ? (
+                  {a.stripeAccountId ? (
+                    <button
+                      onClick={() => copyId(a.stripeAccountId)}
+                      className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {a.stripeAccountId}
+                      {copied === a.stripeAccountId ? (
                         <Check className="size-3 text-success" />
                       ) : (
                         <Copy className="size-3" />
-                      ))}
-                  </button>
+                      )}
+                    </button>
+                  ) : (
+                    <p className="text-xs text-destructive">
+                      {a.errorMessage || 'provisioning failed'}
+                    </p>
+                  )}
                 </div>
-                {a.status === 'active' ? (
+                {a.status === 'active' || a.status === 'assigned' ? (
                   <Badge variant="success">
                     <span className="size-1.5 rounded-full bg-success" />
                     Active
@@ -195,7 +279,7 @@ export function ConnectedAccountsPanel({
             ))}
             {filtered.length === 0 && (
               <li className="py-6 text-center text-sm text-muted-foreground">
-                No accounts match “{query}”.
+                No accounts match "{query}".
               </li>
             )}
           </ul>
