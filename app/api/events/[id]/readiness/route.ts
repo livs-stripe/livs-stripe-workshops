@@ -65,21 +65,19 @@ export async function GET(
       status: 'pass',
       detail: 'All participant slots have Stripe accounts ready.',
     })
-  } else if (poolReady >= 10) {
+  } else if (poolReady > 0) {
     checks.push({
       id: 'accounts_provisioned',
       label: `${poolReady} / ${maxP} accounts pre-provisioned`,
       status: 'warn',
-      detail:
-        'Minimum 10 accounts ready. Provisioning may still be in progress.',
+      detail: 'Provisioning still in progress. Participants can join now.',
     })
   } else {
     checks.push({
       id: 'accounts_provisioned',
       label: `${poolReady} / ${maxP} accounts pre-provisioned`,
-      status: 'fail',
-      detail:
-        'Need at least 10 accounts before participants can join. Wait for provisioning.',
+      status: 'warn',
+      detail: 'Provisioning in progress. Accounts will be assigned as they become ready.',
     })
   }
 

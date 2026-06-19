@@ -11,6 +11,7 @@ import { DashboardGif } from '@/components/participant/dashboard-gif'
 import { DashboardLink } from '@/components/participant/dashboard-link'
 import { NarrativeBlock } from '@/components/participant/narrative-block'
 import { StripeDashboardButton } from '@/components/participant/stripe-dashboard-button'
+import { CredentialsCard } from '@/components/participant/credentials-card'
 import { DdosAttackTrigger } from '@/components/participant/ddos-attack-trigger'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { SessionEndedWorkshop } from '@/components/participant/session-ended'
@@ -35,7 +36,7 @@ import {
   Key,
 } from 'lucide-react'
 
-type Participant = { id: string; name: string }
+type Participant = { id: string; name: string; email: string | null; stripeAccountId: string | null }
 type EventRow = {
   id: string
   name: string
@@ -376,7 +377,10 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                     )}
 
                     {step.renderCredentialsCard && (
-                      <CredentialsPlaceholder />
+                      <CredentialsCard
+                        stripeAccountId={participant.stripeAccountId}
+                        email={participant.email}
+                      />
                     )}
 
                     {step.renderDdosPreview && (
@@ -459,32 +463,6 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
   )
 }
 
-function CredentialsPlaceholder() {
-  return (
-    <Card className="my-4 max-w-sm border-border p-4">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        Account credentials
-      </p>
-      <div className="flex flex-col gap-2 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Account ID</span>
-          <span className="font-mono text-xs text-foreground">acct_••••••••</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Email</span>
-          <span className="text-xs text-foreground">assigned on join</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Password</span>
-          <span className="text-xs text-foreground">••••••••</span>
-        </div>
-      </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">
-        Your credentials are available via the Stripe Dashboard button. Login links give you direct access without needing to enter these manually.
-      </p>
-    </Card>
-  )
-}
 
 function CompletionCard({
   event,

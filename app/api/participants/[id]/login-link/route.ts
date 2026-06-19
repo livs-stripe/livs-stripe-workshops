@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { db } from '@/lib/db'
-import { participants, events } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
-import { createLoginLink } from '@/lib/stripe-accounts'
-import Stripe from 'stripe'
 
 export async function GET(
   _req: Request,
@@ -22,6 +17,21 @@ export async function GET(
         { status: 401 },
       )
     }
+
+    // Check platform key before any DB or Stripe calls
+    const platformKey = process.env.STRIPE_SECRET_KEY
+    if (!platformKey || !platformKey.startsWith('sk_')) {
+      console.error('[login-link] STRIPE_SECRET_KEY missing or invalid')
+      return NextResponse.json(
+        { error: 'Platform configuration error. Contact your facilitator.', code: 'INVALID_PLATFORM_KEY' },
+        { status: 500 },
+      )
+    }
+
+    // Dynamically import heavy dependencies to avoid module-level crashes
+    const { db } = await import('@/lib/db')
+    const { participants, events } = await import('@/lib/db/schema')
+    const { eq } = await import('drizzle-orm')
 
     const [p] = await db
       .select({
@@ -62,45 +72,41 @@ export async function GET(
       )
     }
 
-    // Check platform key
-    const platformKey = process.env.STRIPE_SECRET_KEY
-    if (!platformKey || !platformKey.startsWith('sk_')) {
+    // Create login link using the Stripe API directly (avoid import chain issues)
+    const Stripe = (await import('stripe')).default
+    const stripe = new Stripe(platformKey, { maxNetworkRetries: 2 })
+
+    const loginLink = await stripe.accounts.createLoginLink(p.stripeAccountId)
+    return NextResponse.json({ url: loginLink.url })
+  } catch (err: unknown) {
+    // Handle Stripe errors
+    const stripeErr = err as { code?: string; statusCode?: number; type?: string; message?: string }
+
+    if (stripeErr.code === 'account_invalid') {
       return NextResponse.json(
-        { error: 'Platform configuration error. Contact your facilitator.', code: 'INVALID_PLATFORM_KEY' },
-        { status: 500 },
+        { error: 'Your Stripe account could not be found. Contact your facilitator.', code: 'ACCOUNT_INVALID' },
+        { status: 404 },
       )
     }
-
-    const url = await createLoginLink(p.stripeAccountId)
-    return NextResponse.json({ url })
-  } catch (err) {
-    // Handle specific Stripe errors
-    if (err instanceof Stripe.errors.StripeError) {
-      if (err.code === 'account_invalid') {
-        return NextResponse.json(
-          { error: 'Your Stripe account could not be found. Contact your facilitator.', code: 'ACCOUNT_INVALID' },
-          { status: 404 },
-        )
-      }
-      if (err.statusCode === 429) {
-        return NextResponse.json(
-          { error: 'Too many requests. Wait a few seconds and try again.', code: 'RATE_LIMITED' },
-          { status: 429 },
-        )
-      }
-      if (err.type === 'StripeAuthenticationError') {
-        return NextResponse.json(
-          { error: 'Platform authentication failed. Contact your facilitator.', code: 'AUTH_ERROR' },
-          { status: 401 },
-        )
-      }
+    if (stripeErr.statusCode === 429) {
+      return NextResponse.json(
+        { error: 'Too many requests. Wait a few seconds and try again.', code: 'RATE_LIMITED' },
+        { status: 429 },
+      )
+    }
+    if (stripeErr.type === 'StripeAuthenticationError') {
+      return NextResponse.json(
+        { error: 'Platform authentication failed. Contact your facilitator.', code: 'AUTH_ERROR' },
+        { status: 401 },
+      )
     }
 
     console.error('[login-link] Unhandled error:', {
       participantId: id,
       error: err instanceof Error ? err.message : String(err),
-      code: (err as { code?: string }).code,
-      type: (err as { type?: string }).type,
+      code: stripeErr.code,
+      type: stripeErr.type,
+      statusCode: stripeErr.statusCode,
     })
 
     return NextResponse.json(
@@ -108,4 +114,12 @@ export async function GET(
       { status: 500 },
     )
   }
+}
+
+// Support both GET and POST in case frontend uses either method
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  return GET(req, context)
 }

@@ -53,6 +53,8 @@ export default async function WorkshopPage() {
           participant: {
             id: data.participant.id,
             name: data.participant.name,
+            email: data.participant.email ?? null,
+            stripeAccountId: data.participant.stripeAccountId ?? null,
           },
           event: {
             id: data.event.id,
