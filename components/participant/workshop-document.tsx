@@ -4,10 +4,13 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { saveWorkshopProgress, leaveWorkshop } from '@/app/actions/participant'
-import { WORKSHOP_MODULES } from '@/lib/workshop-modules'
+import { WORKSHOP_MODULES, SCORED_MODULES } from '@/lib/workshop-modules'
 import { getTheme } from '@/lib/themes'
 import { WorkshopCallout } from '@/components/participant/workshop-callout'
 import { DashboardGif } from '@/components/participant/dashboard-gif'
+import { DashboardLink } from '@/components/participant/dashboard-link'
+import { NarrativeBlock } from '@/components/participant/narrative-block'
+import { StripeDashboardButton } from '@/components/participant/stripe-dashboard-button'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { SessionEndedWorkshop } from '@/components/participant/session-ended'
 import {
@@ -28,6 +31,7 @@ import {
   ArrowLeft,
   PartyPopper,
   Mail,
+  Key,
 } from 'lucide-react'
 
 type Participant = { id: string; name: string }
@@ -116,11 +120,16 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
     [progress],
   )
 
+  const scoredDone = useMemo(
+    () => SCORED_MODULES.filter((m) => doneModules.has(m.id)).length,
+    [doneModules],
+  )
+
   const firstIncomplete =
     WORKSHOP_MODULES.find((m) => !doneModules.has(m.id)) ??
     WORKSHOP_MODULES[WORKSHOP_MODULES.length - 1]
   const [selectedId, setSelectedId] = useState(firstIncomplete.id)
-  const allDone = doneModules.size === WORKSHOP_MODULES.length
+  const allDone = scoredDone === SCORED_MODULES.length
 
   if (live?.event?.status === 'ended') {
     return (
@@ -172,7 +181,11 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
     const nowDone = !current.moduleDone
     persist(selected.id, { ...current, moduleDone: nowDone })
     if (nowDone) {
-      toast.success(`Module ${selected.number} complete for this session`)
+      if (!selected.isPrerequisite) {
+        toast.success(`Module ${selected.number} complete for this session`)
+      } else {
+        toast.success('Getting Started complete')
+      }
       const next = WORKSHOP_MODULES.find((m) => m.number === selected.number + 1)
       if (next) setTimeout(() => setSelectedId(next.id), 350)
     }
@@ -188,9 +201,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
   const moduleIndex = WORKSHOP_MODULES.findIndex((m) => m.id === selected.id)
   const prevModule = WORKSHOP_MODULES[moduleIndex - 1]
   const nextModule = WORKSHOP_MODULES[moduleIndex + 1]
-  const overallPct = Math.round(
-    (doneModules.size / WORKSHOP_MODULES.length) * 100,
-  )
+  const overallPct = Math.round((scoredDone / SCORED_MODULES.length) * 100)
 
   return (
     <div className="min-h-svh">
@@ -213,7 +224,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
             <div className="text-right">
               <div className="text-sm font-medium">{participant.name}</div>
               <div className="text-[11px] text-muted-foreground">
-                {doneModules.size}/{WORKSHOP_MODULES.length} modules this session
+                {scoredDone}/{SCORED_MODULES.length} modules this session
               </div>
             </div>
             <Button
@@ -236,7 +247,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
           <div className="mb-3 flex items-center justify-between">
             <h2 className="label-caps text-muted-foreground">Modules</h2>
             <span className="text-xs text-muted-foreground">
-              {doneModules.size}/{WORKSHOP_MODULES.length}
+              {scoredDone}/{SCORED_MODULES.length}
             </span>
           </div>
           <Progress value={overallPct} className="mb-4 h-1.5" />
@@ -260,22 +271,31 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                       <Check className="size-4 text-success" />
                     ) : isActive ? (
                       <CircleDot className="size-4 text-primary" />
+                    ) : m.isPrerequisite ? (
+                      <Key className="size-4 text-muted-foreground" />
                     ) : (
                       <Clock className="size-4 text-muted-foreground" />
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
-                      {m.number}. {m.title}
+                      {m.isPrerequisite ? m.title : `${m.number}. ${m.title}`}
                     </span>
-                    <span className="block text-xs text-muted-foreground">
-                      ~{m.estMinutes} min
-                    </span>
+                    {!m.isPrerequisite && (
+                      <span className="block text-xs text-muted-foreground">
+                        ~{m.estMinutes} min
+                      </span>
+                    )}
                   </span>
                 </button>
               )
             })}
           </nav>
+
+          {/* Stripe Dashboard button */}
+          <div className="mt-4 border-t border-border pt-4">
+            <StripeDashboardButton participantId={participant.id} />
+          </div>
         </aside>
 
         <section className="min-w-0 flex-1">
@@ -285,9 +305,15 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
           <article className="prose prose-neutral max-w-none dark:prose-invert">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="font-mono">
-                Module {selected.number}
-              </Badge>
+              {selected.isPrerequisite ? (
+                <Badge variant="secondary" className="gap-1">
+                  <Key className="size-3" /> Prerequisite
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="font-mono">
+                  Module {selected.number}
+                </Badge>
+              )}
               {doneModules.has(selected.id) ? (
                 <Badge variant="success">Done this session</Badge>
               ) : null}
@@ -295,6 +321,10 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
             <h1 className="mb-2 text-2xl font-semibold tracking-tight text-foreground">
               {selected.title}
             </h1>
+
+            {/* Narrative story block */}
+            <NarrativeBlock text={selected.narrative} />
+
             <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
               {selected.intro}
             </p>
@@ -325,11 +355,29 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                         <Check className="size-4" />
                       </button>
                     </div>
+
+                    {step.dashboardLink && (
+                      <div className="mb-3">
+                        <DashboardLink to={step.dashboardLink.url} label={step.dashboardLink.label} />
+                      </div>
+                    )}
+
                     {step.body ? (
-                      <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                      <p className="mb-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                         {step.body}
                       </p>
                     ) : null}
+
+                    {step.renderDashboardButton && (
+                      <div className="my-4 max-w-xs">
+                        <StripeDashboardButton participantId={participant.id} />
+                      </div>
+                    )}
+
+                    {step.renderCredentialsCard && (
+                      <CredentialsPlaceholder />
+                    )}
+
                     {step.gif ? <DashboardGif gif={step.gif} /> : null}
                     {step.callouts?.length ? (
                       <div className="mt-4 flex flex-col gap-3">
@@ -387,6 +435,33 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
   )
 }
 
+function CredentialsPlaceholder() {
+  return (
+    <Card className="my-4 max-w-sm border-border p-4">
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        Account credentials
+      </p>
+      <div className="flex flex-col gap-2 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Account ID</span>
+          <span className="font-mono text-xs text-foreground">acct_••••••••</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Email</span>
+          <span className="text-xs text-foreground">assigned on join</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Password</span>
+          <span className="text-xs text-foreground">••••••••</span>
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Your credentials are available via the Stripe Dashboard button. Login links give you direct access without needing to enter these manually.
+      </p>
+    </Card>
+  )
+}
+
 function CompletionCard({
   event,
   participantName,
@@ -403,14 +478,14 @@ function CompletionCard({
         </h2>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Nice work, {participantName}. You worked through all {WORKSHOP_MODULES.length}{' '}
+        Nice work, {participantName}. You worked through all {SCORED_MODULES.length}{' '}
         modules in {event.name} during this live session.
       </p>
       <ul className="mt-4 grid gap-2">
-        {WORKSHOP_MODULES.map((m) => (
+        {SCORED_MODULES.map((m) => (
           <li key={m.id} className="flex items-start gap-2 text-sm">
             <Check className="mt-0.5 size-4 shrink-0 text-success" />
-            <span>{m.doneLabel.replace(/^I&apos;ve |^I've /, '')}</span>
+            <span>{m.doneLabel.replace(/^I've /, '')}</span>
           </li>
         ))}
       </ul>

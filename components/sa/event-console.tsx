@@ -10,7 +10,7 @@ import {
   exportParticipantsCsv,
 } from '@/app/actions/events'
 import { ATTACK_WAVE_TYPES, MODULES, TOTAL_POSSIBLE_SCORE } from '@/lib/workshop-content'
-import { WORKSHOP_MODULES } from '@/lib/workshop-modules'
+import { WORKSHOP_MODULES, SCORED_MODULES } from '@/lib/workshop-modules'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -121,7 +121,7 @@ export function EventConsole({ initialData }: { initialData: Detail }) {
   const detail = data ?? initialData
   const { event, roster, waves, accounts, participantDataExpired } = detail
   const isWorkshop = event.eventType === 'workshop'
-  const moduleLen = isWorkshop ? WORKSHOP_MODULES.length : MODULES.length
+  const moduleLen = isWorkshop ? SCORED_MODULES.length : MODULES.length
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -503,15 +503,15 @@ export function EventConsole({ initialData }: { initialData: Detail }) {
               Progress for this live session only.
             </p>
             <ol className="flex flex-col gap-2">
-              {WORKSHOP_MODULES.map((m, idx) => {
-                const onOrPast = roster.filter((p) => p.currentModule > idx).length
+              {SCORED_MODULES.map((m) => {
+                const onOrPast = roster.filter((p) => p.currentModule >= m.number).length
                 return (
                   <li
                     key={m.id}
                     className="flex items-center gap-3 rounded-md border border-border p-3"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded bg-primary/10 font-mono text-xs font-semibold text-primary">
-                      {idx + 1}
+                      {m.number}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {m.title}

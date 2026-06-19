@@ -20,11 +20,20 @@ export type WorkshopGif = {
   screen: string // dashboard path, e.g. "Radar → Rules"
 }
 
+export type DashboardUrl = {
+  label: string
+  url: string
+}
+
 export type WorkshopStep = {
   title: string
   body?: string
   gif?: WorkshopGif
   callouts?: Callout[]
+  dashboardLink?: DashboardUrl
+  /** Special rendering flags for Getting Started module */
+  renderDashboardButton?: boolean
+  renderCredentialsCard?: boolean
 }
 
 export type WorkshopModule = {
@@ -33,25 +42,70 @@ export type WorkshopModule = {
   title: string
   estMinutes: number
   intro: string
+  narrative: string
   steps: WorkshopStep[]
   doneLabel: string
+  /** If true, this module is a prerequisite and not counted in scored progress */
+  isPrerequisite?: boolean
+  /** Summary addition for overview page (story context) */
+  overviewAddition?: string
+}
+
+export const GETTING_STARTED_MODULE: WorkshopModule = {
+  id: 'getting-started',
+  number: 0,
+  title: 'Getting Started',
+  estMinutes: 5,
+  isPrerequisite: true,
+  intro: `You have joined as a participant in this workshop. Before the first module, take five minutes to get your Stripe test account open and familiarise yourself with where things are. Everything in this workshop happens inside that account.`,
+  narrative: `You joined BetFlow's payments team three days ago. The previous fraud analyst left without documentation. Your manager has pointed you at Stripe and told you to work out what is going on. This is your account.`,
+  steps: [
+    {
+      title: 'Open your Stripe Dashboard',
+      body: `Click the "Open Stripe Dashboard" button in the left sidebar. It will open your account in a new tab. The link is generated fresh each time you click it.\n\nIf the link has expired (they last 5 minutes), just click it again and a new one will be generated.`,
+      renderDashboardButton: true,
+    },
+    {
+      title: 'Sign in with your credentials',
+      body: `Your test account credentials are shown below. You will need these if you are prompted to verify your identity or access the account directly at dashboard.stripe.com.`,
+      renderCredentialsCard: true,
+    },
+    {
+      title: 'Get familiar with the Dashboard',
+      body: `Once you are in, take a look around. The left sidebar is how you navigate. The main sections you will use today are Payments, Radar, and Disputes. You do not need to do anything yet — just make sure you can see them.`,
+      gif: {
+        caption: 'Record: the Stripe Dashboard home screen with the left sidebar visible, highlighting Payments, Radar, and Disputes in the navigation.',
+        screen: 'Dashboard → Home',
+      },
+    },
+    {
+      title: 'Keep the Dashboard open',
+      body: `Keep your Stripe Dashboard open in its own tab for the rest of the workshop. Each module will link directly to the relevant section, so you will not need to navigate manually — just click the link and it takes you straight there.`,
+    },
+  ],
+  doneLabel: `I've set up my Stripe Dashboard and I'm ready to start`,
 }
 
 export const WORKSHOP_MODULES: WorkshopModule[] = [
+  GETTING_STARTED_MODULE,
   {
     id: 'orientation',
     number: 1,
     title: 'Getting Oriented in Stripe Radar',
     estMinutes: 5,
     intro:
-      `Stripe Radar is built into every Stripe account — no setup required. Before writing any rules, let's explore what it shows you and understand how it evaluates payments.`,
+      `Stripe Radar is built into every Stripe account — no setup required. Before writing any rules, explore what it shows you and understand how it evaluates payments.`,
+    narrative:
+      `Before you can fix anything, you need to understand what you are looking at. BetFlow has been on Stripe for two years and nobody has ever looked at the Radar section. Start there.`,
+    overviewAddition: `This is your first look at the data BetFlow has been generating for two years.`,
     steps: [
       {
         title: 'Open Radar',
-        body: `In your Stripe Dashboard left sidebar, click Radar. If you don't see it, look under "More" in the navigation. You'll land on the Radar overview page showing recent charge activity and block rates.`,
+        body: `Open Radar in your Dashboard. You will land on the overview page showing recent charge activity and block rates.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
-          caption: 'Navigating to Radar in the Stripe Dashboard',
-          screen: 'Sidebar → Radar',
+          caption: 'Record: opening the Radar overview page in the Stripe Dashboard.',
+          screen: 'Dashboard → Radar',
         },
         callouts: [
           {
@@ -64,7 +118,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Read the overview metrics',
         body: `On the Radar overview, note three numbers: your total charge volume, your block rate percentage, and your review rate. These are your baselines.`,
         gif: {
-          caption: 'The Radar overview dashboard with key metrics',
+          caption: 'Record: the Radar overview dashboard highlighting charge volume, block rate, and review rate.',
           screen: 'Radar → Overview',
         },
         callouts: [
@@ -76,9 +130,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: `Find a payment's risk score`,
-        body: `Go to Payments in the sidebar. Click on any charge. Scroll down to the Radar section on the right side. You'll see a risk score (0-100) and a risk level label: normal, elevated, or highest.`,
+        body: `Open Payments in your Dashboard. Click on any charge. Scroll down to the Radar section on the right side. You will see a risk score (0-100) and a risk level label: normal, elevated, or highest.`,
+        dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
         gif: {
-          caption: 'Finding the Radar risk score on a payment detail page',
+          caption: 'Record: clicking a payment, scrolling to the Radar section, and highlighting the risk score.',
           screen: 'Payments → Charge detail → Radar section',
         },
         callouts: [
@@ -92,8 +147,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Expand the risk factors',
         body: `On the same charge detail, find "Risk factors" below the score. Click "Show all" to see the full list of signals that contributed to this score.`,
         gif: {
-          caption:
-            'Expanding risk factors on a charge to see what drove the score',
+          caption: 'Record: expanding risk factors on a charge detail page to show the full signal list.',
           screen: 'Charge detail → Risk factors',
         },
         callouts: [
@@ -105,9 +159,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Browse the Attributes library',
-        body: `In Radar → Rules, click "New rule". In the rule editor, open the Attributes panel on the right. Browse through the available attributes — note the categories: card, customer, IP, payment, velocity.`,
+        body: `Open Radar Rules in your Dashboard. Click "New rule". In the rule editor, open the Attributes panel on the right. Browse through the available attributes — note the categories: card, customer, IP, payment, velocity.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Browsing the Radar attributes library in the rule editor',
+          caption: 'Record: opening the rule editor and browsing the Attributes panel, showing card/customer/IP/velocity categories.',
           screen: 'Radar → Rules → New rule → Attributes panel',
         },
         callouts: [
@@ -126,14 +181,17 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Your First Block Rule',
     estMinutes: 10,
     intro:
-      `Radar lets you write rules that automatically block, review, or allow payments based on any combination of attributes. Let's start with the most fundamental rule: blocking payments that Stripe's own model has already identified as highest risk.`,
+      `Radar lets you write rules that automatically block, review, or allow payments based on any combination of attributes. Start with the most fundamental rule: blocking payments that Stripe's own model has already identified as highest risk.`,
+    narrative:
+      `You spent an hour reading through Stripe's payment history. About 2% of charges have a risk score above 85. None of them are being blocked. Your first job is to change that.`,
+    overviewAddition: `The first concrete action you take as BetFlow's fraud analyst.`,
     steps: [
       {
         title: 'Open the Rules page',
-        body: `In Radar, click Rules in the left submenu. You'll see three sections: Block, Review, and Allow. Rules in each section evaluate top-to-bottom — the first matching rule wins.`,
+        body: `Open Radar Rules in your Dashboard. You will see three sections: Block, Review, and Allow. Rules in each section evaluate top-to-bottom — the first matching rule wins.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption:
-            'The Radar Rules page showing Block, Review, and Allow sections',
+          caption: 'Record: the Radar Rules page showing the Block, Review, and Allow sections.',
           screen: 'Radar → Rules',
         },
         callouts: [
@@ -147,7 +205,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Create your first Block rule',
         body: `In the Block section, click Add rule. In the rule editor, type: risk_level = 'highest' — then click Add rule. Confirm the prompt that appears.`,
         gif: {
-          caption: 'Writing and saving a block rule for highest risk payments',
+          caption: 'Record: writing risk_level = \'highest\' in the block rule editor and saving.',
           screen: 'Radar → Rules → New block rule',
         },
         callouts: [
@@ -171,7 +229,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Add a Review rule for elevated risk',
         body: `In the Review section, click Add rule. Type: risk_level = 'elevated'`,
         gif: {
-          caption: 'Adding a review rule for elevated risk payments',
+          caption: 'Record: adding a review rule for risk_level = \'elevated\' in the Review section.',
           screen: 'Radar → Rules → New review rule',
         },
         callouts: [
@@ -185,7 +243,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Test your rules against historical data',
         body: `Back on the Rules page, click the three-dot menu on your new block rule. Select "See payments this rule would have affected". Radar will show you which historical charges this rule would have blocked.`,
         gif: {
-          caption: `Using "See affected payments" to audit a rule's impact`,
+          caption: 'Record: clicking the three-dot menu on a rule and selecting "See payments this rule would have affected".',
           screen: 'Radar → Rules → Rule options → See affected payments',
         },
         callouts: [
@@ -201,17 +259,21 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   {
     id: 'velocity-rules',
     number: 3,
-    title: 'Velocity Rules — Stopping Repeat Offenders',
+    title: 'Velocity Rules',
     estMinutes: 12,
     intro:
-      `One of the most reliable fraud signals is repetition — the same card, IP address, or email appearing an unusual number of times in a short window. Velocity rules let you count these occurrences and block when they exceed a normal threshold. They're especially effective against automated bot attacks and card testing.`,
+      `One of the most reliable fraud signals is repetition — the same card, IP address, or email appearing an unusual number of times in a short window. Velocity rules let you count these occurrences and block when they exceed a normal threshold. They are especially effective against automated bot attacks and card testing.`,
+    narrative:
+      `One of your engineers flagged something this morning. Hundreds of small charges, all within a 20-minute window, all from the same two IP addresses. The card numbers are different but the pattern is clear. You need velocity rules.`,
+    overviewAddition: `The same IP addresses are still active. Time to shut them down.`,
     steps: [
       {
         title: 'Understand velocity attributes',
-        body: `In Radar → Rules → New rule, open the Attributes panel. Search for "total_charges". Note all the attributes that appear — they all follow the pattern: total_charges_per_[thing]_[window].`,
+        body: `Open Radar Rules in your Dashboard. Click "New rule" and open the Attributes panel. Search for "total_charges". Note all the attributes that follow the pattern: total_charges_per_[thing]_[window].`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Searching for velocity attributes in the Radar attributes panel',
-          screen: `Radar → Rules → Attributes → search 'total_charges'`,
+          caption: 'Record: searching for "total_charges" in the Radar attributes panel.',
+          screen: 'Radar → Rules → Attributes → search total_charges',
         },
         callouts: [
           {
@@ -224,7 +286,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Write a card velocity rule',
         body: `Create a new Block rule: total_charges_per_card_number_daily > 5`,
         gif: {
-          caption: 'Writing a card velocity block rule',
+          caption: 'Record: writing total_charges_per_card_number_daily > 5 in the block rule editor.',
           screen: 'Radar → Rules → New block rule',
         },
         callouts: [
@@ -242,7 +304,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Write an IP velocity rule',
         body: `Create a new Block rule: total_charges_per_ip_daily > 15`,
         gif: {
-          caption: 'Adding an IP velocity rule to the block rules list',
+          caption: 'Record: adding total_charges_per_ip_daily > 15 as a block rule.',
           screen: 'Radar → Rules → Block rules',
         },
         callouts: [
@@ -256,7 +318,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Add AND conditions to be more precise',
         body: `Edit your IP velocity rule. After total_charges_per_ip_daily > 15, add: and is_anonymous_ip = true — the full rule reads: total_charges_per_ip_daily > 15 and is_anonymous_ip = true`,
         gif: {
-          caption: 'Adding an AND condition to an existing rule',
+          caption: 'Record: editing the IP velocity rule to add an AND condition with is_anonymous_ip.',
           screen: 'Radar → Rules → Edit rule',
         },
         callouts: [
@@ -270,7 +332,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Use metadata for custom velocity tracking',
         body: `BetFlow's PaymentIntents include a metadata field called source_ip. You can reference any metadata field in Radar using double-colon syntax. Create a Block rule: ::source_ip:: = '198.51.100.42'`,
         gif: {
-          caption: 'Writing a metadata rule using double-colon syntax',
+          caption: 'Record: writing a metadata rule using ::source_ip:: double-colon syntax.',
           screen: 'Radar → Rules → New rule → metadata attribute',
         },
         callouts: [
@@ -284,7 +346,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Check rule order',
         body: `On the Rules page, drag your new block rules so card velocity sits above IP velocity. Order matters when you have rules that could affect the same payment.`,
         gif: {
-          caption: 'Drag-and-drop reordering of Radar rules',
+          caption: 'Record: drag-and-drop reordering of rules on the Radar Rules page.',
           screen: 'Radar → Rules → Drag to reorder',
         },
       },
@@ -298,12 +360,16 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     estMinutes: 8,
     intro:
       `Rules catch patterns. Lists catch individuals. When you have specific cards, IP addresses, email addresses, or customers you want to always block (or always allow), lists give you that control without modifying your rule logic.`,
+    narrative:
+      `Your support inbox has three emails from real customers whose cards were charged without their knowledge. You have their card fingerprints and email addresses. The rules you have written will not stop these specific cards — lists will.`,
+    overviewAddition: `Rules catch patterns. Lists catch the specific cards you already know are bad.`,
     steps: [
       {
         title: 'Explore the Lists page',
-        body: `Go to Radar → Lists. You'll see Stripe's built-in global lists and a section for your custom lists. Note that Stripe maintains global blocklists of known-bad cards and IPs — you benefit from these automatically.`,
+        body: `Open Radar Lists in your Dashboard. You will see Stripe's built-in global lists and a section for your custom lists. Note that Stripe maintains global blocklists of known-bad cards and IPs — you benefit from these automatically.`,
+        dashboardLink: { label: 'Radar Lists', url: 'https://dashboard.stripe.com/radar/lists' },
         gif: {
-          caption: 'The Radar Lists page showing global and custom lists',
+          caption: 'Record: the Radar Lists page showing global and custom list sections.',
           screen: 'Radar → Lists',
         },
       },
@@ -311,7 +377,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Create an email blocklist',
         body: `Click New list. Name it "Blocked Email Domains", type: email. Add the following values, one per line: yopmail.com, mailinator.com, guerrillamail.com, tempmail.com, 10minutemail.com`,
         gif: {
-          caption: 'Creating a custom email blocklist and adding values',
+          caption: 'Record: creating a new custom list named "Blocked Email Domains" and adding disposable email values.',
           screen: 'Radar → Lists → New list → Add values',
         },
         callouts: [
@@ -323,25 +389,28 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Write a rule that references your list',
-        body: `In Radar → Rules → Block, add: email in 'Blocked Email Domains'`,
+        body: `Open Radar Rules in your Dashboard. In the Block section, add: email in 'Blocked Email Domains'`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Creating a rule that uses a custom list',
+          caption: 'Record: creating a block rule that references the custom list using "email in \'Blocked Email Domains\'".',
           screen: 'Radar → Rules → New rule → list reference',
         },
       },
       {
         title: 'Create a VIP allow list',
         body: `Create another list called "Verified VIP Customers", type: email. Add a test email address.`,
+        dashboardLink: { label: 'Radar Lists', url: 'https://dashboard.stripe.com/radar/lists' },
         gif: {
-          caption: 'Creating an allow list for trusted customers',
+          caption: 'Record: creating a "Verified VIP Customers" allow list.',
           screen: 'Radar → Lists → New list',
         },
       },
       {
         title: 'Create the allow rule',
-        body: `In Rules → Allow, add: email in 'Verified VIP Customers'. Drag this allow rule to sit ABOVE your block rules.`,
+        body: `Open Radar Rules in your Dashboard. In the Allow section, add: email in 'Verified VIP Customers'. Drag this allow rule to sit ABOVE your block rules.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Adding an allow rule and positioning it above block rules',
+          caption: 'Record: adding an allow rule and dragging it above the block rules.',
           screen: 'Radar → Rules → Allow section → reorder',
         },
         callouts: [
@@ -357,16 +426,20 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   {
     id: 'three-d-secure',
     number: 5,
-    title: '3D Secure — Adding Smart Friction',
+    title: '3D Secure',
     estMinutes: 10,
     intro:
       `Blocking payments is a blunt instrument. Sometimes you want to add a verification step rather than decline outright — especially for higher-value payments where the friction is worth it. 3D Secure (3DS) does exactly this: it asks the cardholder to authenticate through their bank, which both catches fraudsters and shifts fraud liability away from BetFlow.`,
+    narrative:
+      `Your block rate has improved but you are declining some payments that look borderline. A colleague suggests that instead of blocking them outright, you make those customers prove they are real. That is what 3D Secure is for.`,
+    overviewAddition: `Some borderline payments deserve a second look, not an automatic decline.`,
     steps: [
       {
         title: 'Understand what 3DS does',
-        body: `In Stripe Dashboard, go to any successful payment and look for the 3D Secure authentication section. Note whether authentication was attempted and what the outcome was.`,
+        body: `Open Payments in your Dashboard and click any successful payment. Look for the 3D Secure authentication section. Note whether authentication was attempted and what the outcome was.`,
+        dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
         gif: {
-          caption: 'Finding 3D Secure status on a charge detail page',
+          caption: 'Record: finding the 3D Secure status section on a charge detail page.',
           screen: 'Charge detail → 3D Secure section',
         },
         callouts: [
@@ -378,9 +451,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Find the Request 3DS section in Rules',
-        body: `In Radar → Rules, scroll below the Block and Review sections. You'll see a third section: Request 3DS. This is separate from Block and Review.`,
+        body: `Open Radar Rules in your Dashboard. Scroll below the Block and Review sections. You will see a third section: Request 3DS. This is separate from Block and Review.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'The Request 3DS section in Radar Rules',
+          caption: 'Record: scrolling to the Request 3DS section below Block and Review on the Rules page.',
           screen: 'Radar → Rules → Request 3DS section',
         },
       },
@@ -388,7 +462,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Create a 3DS rule for elevated risk',
         body: `In Request 3DS, click Add rule. Type: risk_level = 'elevated'`,
         gif: {
-          caption: 'Adding a Request 3DS rule for elevated risk payments',
+          caption: 'Record: writing risk_level = \'elevated\' in the Request 3DS rule editor.',
           screen: 'Radar → Rules → New 3DS rule',
         },
         callouts: [
@@ -402,8 +476,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Add a 3DS rule for high-value new customers',
         body: `Add another Request 3DS rule: is_new_customer = true and amount > 20000`,
         gif: {
-          caption:
-            'Creating a 3DS rule targeting new customers with high deposit amounts',
+          caption: 'Record: adding a 3DS rule for is_new_customer = true and amount > 20000.',
           screen: 'Radar → Rules → 3DS rules',
         },
         callouts: [
@@ -417,7 +490,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Test with a 3DS test card',
         body: `Use Stripe's 3DS test card number 4000 0025 0000 3155 to make a test payment. You'll see the 3DS authentication popup appear.`,
         gif: {
-          caption: 'Completing a 3DS authentication prompt during checkout',
+          caption: 'Record: making a test payment with the 3DS test card and completing the authentication popup.',
           screen: 'Test checkout → 3DS popup',
         },
         callouts: [
@@ -437,12 +510,16 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     estMinutes: 12,
     intro:
       `Disputes (also called chargebacks) happen when a cardholder tells their bank a charge was unauthorised. The bank immediately reverses the funds and gives the merchant a window to respond with evidence. Understanding the dispute process and knowing how to fight disputes is as important as preventing fraud in the first place.`,
+    narrative:
+      `Four disputes came in overnight. BetFlow has never responded to a dispute before — the previous analyst did not know you could. You are about to find out how the process works and what happens when you actually submit evidence.`,
+    overviewAddition: `BetFlow has been leaving money on the table every time a dispute went uncontested.`,
     steps: [
       {
         title: 'Find the Disputes section',
-        body: `Go to Payments → Disputes. Browse the list — note the columns: amount, reason code, status, and response deadline.`,
+        body: `Open Disputes in your Dashboard. Browse the list — note the columns: amount, reason code, status, and response deadline.`,
+        dashboardLink: { label: 'Disputes', url: 'https://dashboard.stripe.com/disputes' },
         gif: {
-          caption: 'The Disputes list in Stripe Dashboard',
+          caption: 'Record: the Disputes list in the Stripe Dashboard showing amount, reason, status, and deadline columns.',
           screen: 'Payments → Disputes',
         },
         callouts: [
@@ -456,7 +533,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Open a dispute and understand the timeline',
         body: `Click on any dispute. Note: the date the dispute was opened, the response deadline, and the dispute amount (which may include a dispute fee on top of the original charge amount).`,
         gif: {
-          caption: 'Opening a dispute to see the timeline and response deadline',
+          caption: 'Record: opening a dispute detail page showing the timeline and response deadline.',
           screen: 'Dispute detail → Timeline',
         },
         callouts: [
@@ -470,7 +547,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Review the evidence fields',
         body: `Scroll down to the Evidence section of the dispute. Read through the available fields: customer email, IP address, transaction date, customer activity, terms acceptance. Note which fields BetFlow could populate.`,
         gif: {
-          caption: 'The dispute evidence submission form with all available fields',
+          caption: 'Record: the dispute evidence submission form with all available fields visible.',
           screen: 'Dispute → Evidence section',
         },
         callouts: [
@@ -484,15 +561,16 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Submit evidence',
         body: `Fill in the available evidence fields using the test data provided, then click Submit evidence. Note that once submitted, evidence can't be changed.`,
         gif: {
-          caption: 'Filling in and submitting evidence for a dispute',
+          caption: 'Record: filling in evidence fields and clicking Submit.',
           screen: 'Dispute → Evidence → Submit',
         },
       },
       {
         title: 'Write prevention rules',
-        body: `Back in Radar, create a Review rule: is_new_customer = true and amount > 10000 — This flags large first-time deposits for manual review before the money moves.`,
+        body: `Open Radar Rules in your Dashboard. Create a Review rule: is_new_customer = true and amount > 10000 — This flags large first-time deposits for manual review before the money moves.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Adding a review rule to flag suspicious new customer deposits',
+          caption: 'Record: adding a review rule for new customers with large deposit amounts.',
           screen: 'Radar → Rules → New review rule',
         },
         callouts: [
@@ -504,9 +582,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Understand dispute outcomes',
-        body: `In Disputes, use the Status filter to view Won and Lost disputes. Open a won dispute — note what evidence was submitted.`,
+        body: `Open Disputes in your Dashboard. Use the Status filter to view Won and Lost disputes. Open a won dispute — note what evidence was submitted.`,
+        dashboardLink: { label: 'Disputes', url: 'https://dashboard.stripe.com/disputes' },
         gif: {
-          caption: 'Filtering disputes by outcome and reviewing a won dispute',
+          caption: 'Record: filtering disputes by Won status and opening a won dispute to see submitted evidence.',
           screen: 'Disputes → Filter by Won',
         },
         callouts: [
@@ -526,12 +605,16 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     estMinutes: 10,
     intro:
       `The hidden cost of fraud prevention is legitimate customers getting incorrectly blocked. Every time a real customer's deposit is declined, BetFlow loses that revenue and risks losing the customer permanently. This module covers how to protect your best customers from your own fraud rules using allow rules and precise rule conditions.`,
+    narrative:
+      `Your head of growth sent you a message at 9am. Three of BetFlow's top customers had deposits declined last night. Your velocity rules caught them. You need to fix this without undoing everything you have built.`,
+    overviewAddition: `Good fraud rules create false positives. Good fraud analysts fix them.`,
     steps: [
       {
         title: 'Understand false positive cost',
-        body: `In Radar → Overview, look at your block rate. Now consider: if 0.5% of blocked charges are legitimate customers, what is the revenue impact per month at BetFlow's deposit volumes?`,
+        body: `Open Radar in your Dashboard. Look at your block rate on the overview. Now consider: if 0.5% of blocked charges are legitimate customers, what is the revenue impact per month at BetFlow's deposit volumes?`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
-          caption: 'Block rate metrics in the Radar Overview dashboard',
+          caption: 'Record: the Radar overview showing block rate metrics.',
           screen: 'Radar → Overview → Metrics',
         },
         callouts: [
@@ -543,9 +626,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Create a metadata-based allow rule',
-        body: `BetFlow's PaymentIntents include a metadata field kyc_verified set to 'true' for all identity-verified accounts. Create an Allow rule: ::kyc_verified:: = 'true'`,
+        body: `Open Radar Rules in your Dashboard. BetFlow's PaymentIntents include a metadata field kyc_verified set to 'true' for all identity-verified accounts. Create an Allow rule: ::kyc_verified:: = 'true'`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Creating a metadata allow rule using double-colon syntax',
+          caption: 'Record: creating an allow rule using ::kyc_verified:: = \'true\' metadata syntax.',
           screen: 'Radar → Rules → New allow rule',
         },
         callouts: [
@@ -559,7 +643,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Position the allow rule correctly',
         body: `Drag your allow rule to the top of the Allow section. Verify it appears BEFORE any matching block rules in the evaluation order.`,
         gif: {
-          caption: 'Reordering rules to ensure the allow rule fires first',
+          caption: 'Record: dragging the allow rule to the top of the Allow section.',
           screen: 'Radar → Rules → Drag reorder',
         },
       },
@@ -567,7 +651,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Create a risk-specific exception',
         body: `Create another Allow rule for repeat customers: customer_transaction_count > 20 and risk_score < 65 — This passes through established customers who are below the risk threshold.`,
         gif: {
-          caption: 'Adding a compound allow rule for established customers',
+          caption: 'Record: adding a compound allow rule with customer_transaction_count > 20 and risk_score < 65.',
           screen: 'Radar → Rules → New allow rule with AND condition',
         },
       },
@@ -575,22 +659,22 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         title: 'Test your allow rules',
         body: `Use Stripe's rule tester to check a payment from a long-standing customer. Confirm the allow rule fires before any block rules would have triggered.`,
         gif: {
-          caption:
-            'Testing that an allow rule overrides a block rule for a specific payment',
+          caption: 'Record: using the rule tester to verify an allow rule overrides a block rule for a specific payment.',
           screen: 'Radar → Rules → Test rule',
         },
       },
       {
         title: 'Calculate your precision',
-        body: `Look at your Radar Overview. Note your block rate and your fraud rate. A healthy ratio is fraud rate significantly lower than block rate — if they're close, your rules may be too aggressive or catching too much legitimate traffic.`,
+        body: `Open Radar in your Dashboard. Note your block rate and your fraud rate. A healthy ratio is fraud rate significantly lower than block rate — if they're close, your rules may be too aggressive or catching too much legitimate traffic.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
-          caption: 'Comparing block rate to fraud rate in the Radar Overview',
+          caption: 'Record: comparing block rate to fraud rate on the Radar Overview.',
           screen: 'Radar → Overview → Metrics comparison',
         },
         callouts: [
           {
             kind: 'tip',
-            text: `Target precision formula: fraud_blocked ÷ (fraud_blocked + legit_blocked). Above 0.85 (85%) is considered good. Above 0.95 is excellent. Below 0.70 means you're hurting legitimate revenue significantly.`,
+            text: `Target precision formula: fraud_blocked / (fraud_blocked + legit_blocked). Above 0.85 (85%) is considered good. Above 0.95 is excellent. Below 0.70 means you're hurting legitimate revenue significantly.`,
           },
         ],
       },
@@ -603,21 +687,25 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Putting It All Together',
     estMinutes: 8,
     intro:
-      `You've built individual rules and lists throughout this workshop. This final module is about stepping back and thinking about your complete Radar strategy — how the rules interact, what order they run in, and how to maintain and evolve them over time.`,
+      `You have built individual rules and lists throughout this workshop. This final module is about stepping back and thinking about your complete Radar strategy — how the rules interact, what order they run in, and how to maintain and evolve them over time.`,
+    narrative:
+      `It has been a full week. Your block rate is up, your dispute rate is down, and only one VIP customer complained. Before you write your end-of-week summary, step back and make sure the whole rule set makes sense and nothing obvious is missing.`,
+    overviewAddition: `The goal is a rule set you can explain to your manager in five minutes.`,
     steps: [
       {
         title: 'Audit your complete rule set',
-        body: `Go to Radar → Rules and look at everything you've built today. You should have: Block rules (risk_level, velocity, IP, lists), Review rules (elevated risk, new customer), Request 3DS rules, Allow rules (KYC, repeat customers).`,
+        body: `Open Radar Rules in your Dashboard. Look at everything you have built today. You should have: Block rules (risk_level, velocity, IP, lists), Review rules (elevated risk, new customer), Request 3DS rules, Allow rules (KYC, repeat customers).`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
-          caption: 'Full view of a completed Radar rule set',
+          caption: 'Record: full view of a completed Radar rule set with all sections visible.',
           screen: 'Radar → Rules → Complete rule list',
         },
       },
       {
         title: 'Check the overall rule order',
-        body: `Verify your rules follow this general priority: Allow rules first → Block rules → Review rules. Radar evaluates top-to-bottom within each category — the first match wins.`,
+        body: `Verify your rules follow this general priority: Allow rules first, then Block rules, then Review rules. Radar evaluates top-to-bottom within each category — the first match wins.`,
         gif: {
-          caption: 'Verifying rule order across all three Radar rule categories',
+          caption: 'Record: showing the full rules page with correct ordering across Allow, Block, and Review.',
           screen: 'Radar → Rules → Full view',
         },
         callouts: [
@@ -629,17 +717,18 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Use the rule evaluator for a final audit',
-        body: `In Radar → Rules, use "Test rule" on your most important block rule. Run it against 5 different payments from your history — a mix of clearly legitimate and flagged charges.`,
+        body: `In Radar Rules, use "Test rule" on your most important block rule. Run it against 5 different payments from your history — a mix of clearly legitimate and flagged charges.`,
         gif: {
-          caption: 'Running the rule evaluator on multiple historical payments',
+          caption: 'Record: using the rule evaluator on multiple historical payments.',
           screen: 'Radar → Rules → Test rule → multiple payments',
         },
       },
       {
         title: 'Set up a Stripe webhook for dispute alerts',
-        body: `In Developers → Webhooks, add an endpoint. In the events list, select: charge.dispute.created — this will notify your system any time a new dispute is filed.`,
+        body: `Open Webhooks in your Dashboard. Add an endpoint. In the events list, select: charge.dispute.created — this will notify your system any time a new dispute is filed.`,
+        dashboardLink: { label: 'Webhooks', url: 'https://dashboard.stripe.com/webhooks' },
         gif: {
-          caption: 'Creating a webhook for dispute created events',
+          caption: 'Record: creating a webhook endpoint and subscribing to charge.dispute.created.',
           screen: 'Developers → Webhooks → New endpoint',
         },
         callouts: [
@@ -651,9 +740,10 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Review the Radar ML model block (optional read)',
-        body: `In Radar → Overview, click "Stripe ML" in the block breakdown chart. This shows how many charges were blocked by Stripe's ML model vs your custom rules.`,
+        body: `Open Radar in your Dashboard. Click "Stripe ML" in the block breakdown chart. This shows how many charges were blocked by Stripe's ML model vs your custom rules.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
-          caption: 'Stripe ML vs custom rules breakdown in Radar Overview',
+          caption: 'Record: clicking "Stripe ML" in the block breakdown chart to see ML vs custom rule blocks.',
           screen: 'Radar → Overview → Block breakdown',
         },
         callouts: [
@@ -668,4 +758,5 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
   },
 ]
 
-export const WORKSHOP_MODULE_COUNT = WORKSHOP_MODULES.length
+export const SCORED_MODULES = WORKSHOP_MODULES.filter((m) => !m.isPrerequisite)
+export const WORKSHOP_MODULE_COUNT = SCORED_MODULES.length

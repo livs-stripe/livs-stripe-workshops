@@ -60,14 +60,18 @@ export function ReadinessChecklist({
     { refreshInterval: 10_000 },
   )
 
-  // Provisioning progress (separate poll, 3s until complete)
+  // Provisioning progress (separate poll, 3s until complete then stop)
+  const [provisionDone, setProvisionDone] = useState(false)
   const { data: provision } = useSWR<ProvisionStatus>(
     `/api/events/${eventId}/provision-status`,
     fetcher,
-    {
-      refreshInterval: provision?.ready >= maxParticipants ? 0 : 3000,
-    },
+    { refreshInterval: provisionDone ? 0 : 3000 },
   )
+  useEffect(() => {
+    if (provision && provision.ready >= maxParticipants) {
+      setProvisionDone(true)
+    }
+  }, [provision, maxParticipants])
 
   const provisionPct = provision
     ? Math.round((provision.ready / maxParticipants) * 100)
