@@ -5,6 +5,7 @@ import { getCurrentParticipant } from '@/app/actions/participant'
 import { WorkshopExperience } from '@/components/participant/workshop-experience'
 import { WorkshopDocument } from '@/components/participant/workshop-document'
 import { WorkshopHolding } from '@/components/participant/workshop-holding'
+import { ChallengeExperience } from '@/components/participant/challenge-experience'
 import { SessionEndedChallenge, SessionEndedWorkshop } from '@/components/participant/session-ended'
 import { isAvailableTheme } from '@/lib/themes'
 import { getSessionEndsAt } from '@/lib/event-retention'
@@ -86,36 +87,30 @@ export default async function WorkshopPage() {
     )
   }
 
-  const initialData = {
-    participant: {
-      id: data.participant.id,
-      name: data.participant.name,
-      score: data.participant.score,
-      currentModule: data.participant.currentModule,
-    },
-    event: {
-      id: data.event.id,
-      name: data.event.name,
-      description: data.event.description,
-      status: data.event.status,
-      eventType: data.event.eventType,
-      eventTheme: data.event.eventTheme,
-      ...eventTiming,
-    },
-    progress: data.progress.map((p) => ({
-      moduleId: p.moduleId,
-      status: p.status,
-      score: p.score,
-    })),
-    waves: data.waves.map((w) => ({
-      id: w.id,
-      waveType: w.waveType,
-      label: w.label,
-      firedAt: w.firedAt.toISOString(),
-    })),
-  }
-
-  return <WorkshopExperience initialData={initialData} />
+  // Challenge mode — balance-based fraud defence simulation
+  return (
+    <ChallengeExperience
+      initialData={{
+        participant: {
+          id: data.participant.id,
+          name: data.participant.name,
+          email: data.participant.email ?? null,
+          stripeAccountId: data.participant.stripeAccountId ?? null,
+          currentBalance: data.participant.currentBalance,
+          totalLostAmount: data.participant.totalLostAmount,
+          totalBlockedAmount: data.participant.totalBlockedAmount,
+          currentModule: data.participant.currentModule,
+        },
+        event: {
+          id: data.event.id,
+          name: data.event.name,
+          status: data.event.status,
+          ...eventTiming,
+        },
+        facilitatorName: INSTRUCTOR_NAME,
+      }}
+    />
+  )
 }
 
 function safeParseSteps(value: string): number[] {

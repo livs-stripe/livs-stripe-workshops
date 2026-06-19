@@ -107,7 +107,12 @@ export const participants = pgTable('participants', {
   company: text('company'),
   score: integer('score').notNull().default(0),
   currentModule: integer('currentModule').notNull().default(0),
-  provisioningStatus: text('provisioningStatus').notNull().default('ready'), // pending | provisioning | ready | failed
+  // Balance tracking for Challenge mode (cents)
+  startingBalance: integer('startingBalance').notNull().default(1000000),
+  currentBalance: integer('currentBalance').notNull().default(1000000),
+  totalBlockedAmount: integer('totalBlockedAmount').notNull().default(0),
+  totalLostAmount: integer('totalLostAmount').notNull().default(0),
+  provisioningStatus: text('provisioningStatus').notNull().default('ready'),
   provisionedAt: timestamp('provisionedAt'),
   assignedAt: timestamp('assignedAt'),
   stripeAccountId: text('stripeAccountId'),
@@ -237,4 +242,35 @@ export const scores = pgTable('scores', {
 }, (t) => [
   index('idx_scores_participant_id').on(t.participantId),
   index('idx_scores_event_id').on(t.eventId),
+])
+
+// Challenge mode: tracks per-step completion for each participant/module.
+export const stepCompletions = pgTable('step_completions', {
+  id: text('id').primaryKey(),
+  participantId: text('participantId').notNull(),
+  eventId: text('eventId').notNull(),
+  moduleNumber: integer('moduleNumber').notNull(),
+  stepNumber: integer('stepNumber').notNull(),
+  completedAt: timestamp('completedAt').notNull().defaultNow(),
+}, (t) => [
+  index('idx_step_completions_participant_module').on(t.participantId, t.moduleNumber),
+])
+
+// Challenge mode: queued attack simulations triggered by completing a module's fire step.
+export const moduleAttackQueue = pgTable('module_attack_queue', {
+  id: text('id').primaryKey(),
+  participantId: text('participantId').notNull(),
+  eventId: text('eventId').notNull(),
+  moduleNumber: integer('moduleNumber').notNull(),
+  status: text('status').notNull().default('pending'), // pending | running | complete | failed
+  startedAt: timestamp('startedAt'),
+  completedAt: timestamp('completedAt'),
+  chargesFired: integer('chargesFired').notNull().default(0),
+  chargesBlocked: integer('chargesBlocked').notNull().default(0),
+  chargesSucceeded: integer('chargesSucceeded').notNull().default(0),
+  amountLostCents: integer('amountLostCents').notNull().default(0),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+}, (t) => [
+  index('idx_attack_queue_status').on(t.status, t.createdAt),
+  index('idx_attack_queue_participant').on(t.participantId, t.moduleNumber),
 ])

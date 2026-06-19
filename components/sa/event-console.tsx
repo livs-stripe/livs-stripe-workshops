@@ -10,6 +10,7 @@ import {
   exportParticipantsCsv,
 } from '@/app/actions/events'
 import { ATTACK_WAVE_TYPES, MODULES, TOTAL_POSSIBLE_SCORE } from '@/lib/workshop-content'
+import { CHALLENGE_MODULES, STARTING_BALANCE_CENTS } from '@/lib/challenge-modules'
 import { WORKSHOP_MODULES, SCORED_MODULES } from '@/lib/workshop-modules'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -121,7 +122,7 @@ export function EventConsole({ initialData }: { initialData: Detail }) {
   const detail = data ?? initialData
   const { event, roster, waves, accounts, participantDataExpired } = detail
   const isWorkshop = event.eventType === 'workshop'
-  const moduleLen = isWorkshop ? SCORED_MODULES.length : MODULES.length
+  const moduleLen = isWorkshop ? SCORED_MODULES.length : CHALLENGE_MODULES.length
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -356,14 +357,10 @@ export function EventConsole({ initialData }: { initialData: Detail }) {
           <Card className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Trophy className="size-4" />
-              <span className="text-sm">Avg score</span>
+              <span className="text-sm">Avg balance</span>
             </div>
             <p className="mt-2 text-2xl font-semibold tabular-nums">
-              {avgScore}
-              <span className="text-sm font-normal text-muted-foreground">
-                {' '}
-                / {TOTAL_POSSIBLE_SCORE}
-              </span>
+              ${((roster.length > 0 ? roster.reduce((s, p) => s + p.score, 0) / roster.length : STARTING_BALANCE_CENTS) / 100).toLocaleString()}
             </p>
           </Card>
         )}
