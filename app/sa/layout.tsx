@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { isInstructor, INSTRUCTOR_NAME, INSTRUCTOR_EMAIL } from '@/lib/instructor-auth'
@@ -11,7 +13,12 @@ export default async function SaLayout({
 }: {
   children: React.ReactNode
 }) {
-  if (!(await isInstructor())) redirect('/sign-in')
+  try {
+    if (!(await isInstructor())) redirect('/sign-in')
+  } catch (err) {
+    if (err && typeof err === 'object' && 'digest' in err) throw err
+    redirect('/sign-in')
+  }
 
   return (
     <div className="min-h-svh">
