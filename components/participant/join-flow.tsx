@@ -3,11 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { joinEvent } from '@/app/actions/participant'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { CodeInput } from '@/components/participant/code-input'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export function JoinFlow() {
   const router = useRouter()
@@ -16,6 +13,8 @@ export function JoinFlow() {
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [joining, startJoin] = useTransition()
+
+  const canSubmit = code.trim().length === 6 && email.trim().length > 0
 
   function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -41,24 +40,33 @@ export function JoinFlow() {
   }
 
   return (
-    <form onSubmit={handleJoin} className="flex flex-col gap-4">
+    <form onSubmit={handleJoin} className="flex flex-col gap-6">
+      {/* Access code */}
       <div className="flex flex-col gap-2.5">
-        <Label className="label-caps text-muted-foreground" htmlFor="access-code">
+        <label
+          htmlFor="access-code"
+          className="text-[11px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: '#425466' }}
+        >
           Access code
-        </Label>
+        </label>
         <CodeInput
           value={code}
           onChange={setCode}
           disabled={joining}
         />
-        <p className="text-xs text-muted-foreground">
-          From your facilitator (email, Slack, or in the room).
-        </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
+      {/* Email */}
+      <div className="flex flex-col gap-2.5">
+        <label
+          htmlFor="email"
+          className="text-[11px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: '#425466' }}
+        >
+          Email
+        </label>
+        <input
           id="email"
           name="email"
           type="email"
@@ -66,51 +74,117 @@ export function JoinFlow() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="name@example.com"
+          placeholder="test@example.com"
+          disabled={joining}
+          className="h-12 w-full rounded-lg px-4 text-[15px] outline-none transition-all placeholder:text-[#9CA3AF]"
+          style={{
+            border: '1.5px solid #E3E8EF',
+            backgroundColor: '#FAFAFA',
+            color: '#0A2540',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#635BFF'
+            e.currentTarget.style.backgroundColor = 'white'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,91,255,0.12)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#E3E8EF'
+            e.currentTarget.style.backgroundColor = e.currentTarget.value ? 'white' : '#FAFAFA'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
-        <p className="text-xs text-muted-foreground">
-          We use your email only to identify you in this live room. No account is
-          created; session data is not kept for you after the event ends.
+        <p className="text-[12px]" style={{ color: '#8898AA' }}>
+          Used to identify you in this session only. No account is created.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="displayName">
-          How you&apos;d like to appear{' '}
-          <span className="text-muted-foreground">(optional)</span>
-        </Label>
-        <Input
+      {/* Display name */}
+      <div className="flex flex-col gap-2.5">
+        <label
+          htmlFor="displayName"
+          className="text-[11px] uppercase tracking-[0.08em]"
+          style={{ color: '#425466' }}
+        >
+          <span className="font-semibold">Display name</span>{' '}
+          <span className="font-normal normal-case">(optional)</span>
+        </label>
+        <input
           id="displayName"
           name="name"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="First name or nickname"
           autoComplete="nickname"
+          disabled={joining}
+          className="h-12 w-full rounded-lg px-4 text-[15px] outline-none transition-all placeholder:text-[#9CA3AF]"
+          style={{
+            border: '1.5px solid #E3E8EF',
+            backgroundColor: '#FAFAFA',
+            color: '#0A2540',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#635BFF'
+            e.currentTarget.style.backgroundColor = 'white'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,91,255,0.12)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#E3E8EF'
+            e.currentTarget.style.backgroundColor = e.currentTarget.value ? 'white' : '#FAFAFA'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
-        <p className="text-xs text-muted-foreground">
-          Shown to your facilitator and on the live roster. If you leave and
-          rejoin with the same email while the session is open, you pick up where
-          you left off in this room—not a saved account.
+        <p className="text-[12px]" style={{ color: '#8898AA' }}>
+          Shown on the live leaderboard and facilitator view.
         </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-[14px] font-medium text-red-600" role="alert">
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={joining} size="lg">
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={!canSubmit || joining}
+        className="h-[52px] w-full rounded-lg text-[16px] font-semibold text-white transition-all"
+        style={{
+          backgroundColor: canSubmit && !joining ? '#635BFF' : '#C4C0FF',
+          cursor: canSubmit && !joining ? 'pointer' : 'not-allowed',
+          border: 'none',
+        }}
+        onMouseEnter={(e) => {
+          if (canSubmit && !joining) {
+            e.currentTarget.style.backgroundColor = '#5851E5'
+            e.currentTarget.style.transform = 'translateY(-1px)'
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,91,255,0.3)'
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = canSubmit && !joining ? '#635BFF' : '#C4C0FF'
+          e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = 'none'
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)'
+        }}
+        onMouseUp={(e) => {
+          if (canSubmit && !joining) {
+            e.currentTarget.style.transform = 'translateY(-1px)'
+          }
+        }}
+      >
         {joining ? (
-          <>
-            <Loader2 className="size-4 animate-spin" /> Joining…
-          </>
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="size-4 animate-spin" />
+            Joining…
+          </span>
         ) : (
-          <>
-            Join session <ArrowRight className="size-4" />
-          </>
+          'Join session →'
         )}
-      </Button>
+      </button>
     </form>
   )
 }

@@ -4,10 +4,6 @@ import { useRef } from 'react'
 
 const LENGTH = 6
 
-/**
- * Stripe-style OTP boxes for the 6-character workshop access code.
- * Large 48x56 cells, monospace, with paste / arrow / backspace handling.
- */
 export function CodeInput({
   value,
   onChange,
@@ -21,6 +17,7 @@ export function CodeInput({
 }) {
   const refs = useRef<Array<HTMLInputElement | null>>([])
   const chars = Array.from({ length: LENGTH }, (_, i) => value[i] ?? '')
+  const allFilled = value.length === LENGTH && !value.includes('')
 
   function setChar(index: number, char: string) {
     const sanitized = char.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
@@ -66,14 +63,19 @@ export function CodeInput({
     if (pasted.length === LENGTH) onComplete?.(pasted)
   }
 
+  function borderColor(char: string, focused: boolean) {
+    if (allFilled) return '#00D924'
+    if (focused) return '#635BFF'
+    if (char) return '#C4C0FF'
+    return '#E3E8EF'
+  }
+
   return (
     <div className="flex gap-2" role="group" aria-label="Workshop access code">
       {chars.map((char, i) => (
         <input
           key={i}
-          ref={(el) => {
-            refs.current[i] = el
-          }}
+          ref={(el) => { refs.current[i] = el }}
           type="text"
           inputMode="text"
           autoComplete="off"
@@ -86,7 +88,26 @@ export function CodeInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
-          className="h-14 w-12 rounded-md border-[1.5px] border-input bg-card text-center font-mono text-2xl font-medium text-foreground transition-[color,box-shadow,border-color] outline-none focus:border-ring focus:ring-[3px] focus:ring-ring/15 disabled:cursor-not-allowed disabled:opacity-60"
+          className="code-input-cell h-[60px] w-[52px] rounded-lg text-center font-mono text-2xl font-semibold uppercase outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60"
+          style={{
+            border: `1.5px solid ${borderColor(char, false)}`,
+            backgroundColor: char ? 'white' : '#FAFAFA',
+            color: '#0A2540',
+            boxShadow: 'none',
+          }}
+          onFocusCapture={(e) => {
+            const el = e.currentTarget
+            el.style.borderColor = allFilled ? '#00D924' : '#635BFF'
+            el.style.backgroundColor = 'white'
+            el.style.boxShadow = '0 0 0 3px rgba(99,91,255,0.12)'
+          }}
+          onBlurCapture={(e) => {
+            const el = e.currentTarget
+            const hasValue = el.value !== ''
+            el.style.borderColor = allFilled ? '#00D924' : hasValue ? '#C4C0FF' : '#E3E8EF'
+            el.style.backgroundColor = hasValue ? 'white' : '#FAFAFA'
+            el.style.boxShadow = 'none'
+          }}
         />
       ))}
     </div>

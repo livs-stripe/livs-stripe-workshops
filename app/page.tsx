@@ -5,8 +5,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentParticipant } from '@/app/actions/participant'
 import { JoinFlow } from '@/components/participant/join-flow'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
-import { BookOpen, Trophy, MonitorPlay } from 'lucide-react'
-import { THEMES, PLATFORM_NAME, PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
+import { THEMES } from '@/lib/themes'
 
 export default async function HomePage() {
   let active = null
@@ -18,105 +17,159 @@ export default async function HomePage() {
   if (active) redirect('/workshop')
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-[1.1fr_1fr]">
-      {/* Hero panel */}
-      <section className="hero-gradient stripe-texture relative flex flex-col justify-between px-6 py-10 text-white md:px-12 md:py-14">
+    <div className="grid min-h-svh md:grid-cols-[55fr_45fr]">
+      {/* Left panel — dark */}
+      <section className="stripe-texture relative flex flex-col justify-between px-8 py-10 md:px-16 md:py-16" style={{ backgroundColor: '#0A2540' }}>
+        {/* Logo */}
         <div className="flex items-center gap-3">
-          <StripeWordmark variant="white" className="h-7 w-auto" />
+          <StripeWordmark variant="white" className="h-6 w-auto" />
           <span className="h-4 w-px bg-white/25" />
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-white/70">
-            {PLATFORM_LOCKUP_SHORT}
+          <span className="font-mono text-[11px] uppercase tracking-[0.15em]" style={{ color: '#8898AA' }}>
+            Workshop Platform
           </span>
         </div>
 
-        <div className="max-w-lg py-12">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80">
-            <span className="size-1.5 rounded-full bg-primary" />
-            Live, hands-on Stripe training
-          </span>
-          <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.1] tracking-[-0.02em] md:text-5xl">
-            {PLATFORM_NAME}
+        {/* Headline + subtext */}
+        <div className="py-10 md:py-0">
+          <h1
+            className="max-w-[480px] text-[32px] font-bold leading-[1.15] tracking-[-0.01em] text-white md:text-[42px]"
+          >
+            Hands-on Stripe training, live with your team.
           </h1>
-          <p className="mt-5 text-pretty text-lg leading-relaxed text-white/70">
-            Temporary live rooms for Stripe customers: your Solutions Architect
-            opens a session, you join with a code—no accounts, no history after
-            the room closes.
+          <p className="mt-4" style={{ fontSize: '17px', color: '#8898AA' }}>
+            Real Stripe environments. Facilitator-led. No account needed.
           </p>
-          <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-sm text-white/80">
-            <li className="flex items-center gap-2">
-              <BookOpen className="size-4 text-primary" /> Self-paced workshops
-            </li>
-            <li className="flex items-center gap-2">
-              <Trophy className="size-4 text-primary" /> Live team challenges
-            </li>
-            <li className="flex items-center gap-2">
-              <MonitorPlay className="size-4 text-primary" /> Real Stripe
-              dashboards
-            </li>
-          </ul>
+
+          {/* How it works — hidden on mobile */}
+          <div className="mt-12 hidden md:block">
+            <p className="mb-6 text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: '#635BFF' }}>
+              How it works
+            </p>
+            <div className="relative flex flex-col gap-5">
+              {/* Connector line */}
+              <div
+                className="absolute left-[14px] top-[28px] h-[calc(100%-28px)] w-px"
+                style={{ backgroundColor: 'rgba(99,91,255,0.2)' }}
+              />
+              <Step
+                num={1}
+                title="Receive your access code"
+                desc="Your facilitator shares a 6-character code via email, Slack, or in the room."
+              />
+              <Step
+                num={2}
+                title="Enter code and your email"
+                desc="No password, no account creation. Your email identifies you within this session only."
+              />
+              <Step
+                num={3}
+                title="Access your live Stripe environment"
+                desc="You'll get credentials to a real Stripe test account for the duration of the session."
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="grid gap-2">
-          <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.15em] text-white/40">
+        {/* Available topics — hidden on mobile */}
+        <div className="hidden md:block">
+          <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: '#635BFF' }}>
             Available topics
           </p>
-          {THEMES.map((theme) => {
-            const ThemeIcon = theme.Icon
-            return (
-            <div
-              key={theme.id}
-              className="flex items-center justify-between border-t border-white/10 py-2.5 text-sm"
-            >
-              <span className="flex items-center gap-3">
-                <ThemeIcon
-                  aria-hidden
-                  className="size-4 shrink-0 text-primary"
-                />
-                <span className="text-white/80">{theme.title}</span>
-              </span>
-              <span
-                className={`font-mono text-xs ${
-                  theme.status === 'available'
-                    ? 'text-primary'
-                    : 'text-white/35'
-                }`}
-              >
-                {theme.status === 'available' ? 'Available' : 'Coming soon'}
-              </span>
-            </div>
-            )
-          })}
+          <div className="flex flex-col gap-3">
+            {THEMES.map((theme) => {
+              const ThemeIcon = theme.Icon
+              const available = theme.status === 'available'
+              return (
+                <div
+                  key={theme.id}
+                  className="flex items-center justify-between"
+                  style={{ cursor: available ? undefined : 'default' }}
+                >
+                  <span className="flex items-center gap-3">
+                    <ThemeIcon
+                      aria-hidden
+                      className="size-5 shrink-0"
+                      style={{ color: available ? '#635BFF' : '#425466' }}
+                    />
+                    <span
+                      className="text-[14px]"
+                      style={{ color: available ? 'white' : '#425466' }}
+                    >
+                      {theme.title}
+                    </span>
+                  </span>
+                  {available ? (
+                    <span className="flex items-center gap-1.5 text-[12px]" style={{ color: '#00D924' }}>
+                      <span className="size-1.5 rounded-full" style={{ backgroundColor: '#00D924' }} />
+                      Available
+                    </span>
+                  ) : (
+                    <span className="text-[12px]" style={{ color: '#425466' }}>
+                      Coming soon
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </section>
 
-      {/* Join panel */}
-      <section className="flex flex-col bg-background px-6 py-10 md:px-12 md:py-14">
+      {/* Right panel — white */}
+      <section className="relative flex flex-col bg-white px-8 py-10 md:px-16 md:py-16">
+        {/* Facilitator link */}
         <div className="flex justify-end">
           <Link
             href="/sign-in"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            className="text-[13px] transition-colors hover:text-[#635BFF]"
+            style={{ color: '#425466' }}
           >
-            Facilitator sign in
+            Facilitator sign in →
           </Link>
         </div>
 
+        {/* Form — vertically centered */}
         <div className="flex flex-1 flex-col justify-center">
           <div className="mx-auto w-full max-w-md">
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Join a live session
+            <h2
+              className="text-[28px] font-bold leading-tight"
+              style={{ color: '#0A2540' }}
+            >
+              Join your session
             </h2>
-            <p className="mt-1.5 mb-7 text-pretty text-muted-foreground">
-              Enter the access code from your facilitator plus your email. This
-              is a one-time room—not a login and not a saved profile.
+            <p className="mt-2 mb-8 text-[15px]" style={{ color: '#425466' }}>
+              Enter the access code your facilitator shared with you.
             </p>
             <JoinFlow />
           </div>
         </div>
 
-        <p className="mx-auto w-full max-w-md text-xs text-muted-foreground">
+        {/* Footer */}
+        <p className="text-center text-[12px]" style={{ color: '#C4C8D2' }}>
           Powered by Stripe · For Stripe Solutions Architects
         </p>
       </section>
+    </div>
+  )
+}
+
+function Step({ num, title, desc }: { num: number; title: string; desc: string }) {
+  return (
+    <div className="relative flex items-start gap-3">
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold"
+        style={{
+          border: '1.5px solid rgba(99,91,255,0.4)',
+          color: '#635BFF',
+          backgroundColor: 'transparent',
+        }}
+      >
+        {num}
+      </span>
+      <div>
+        <p className="text-[15px] font-medium text-white">{title}</p>
+        <p className="mt-0.5 text-[13px]" style={{ color: '#8898AA' }}>{desc}</p>
+      </div>
     </div>
   )
 }

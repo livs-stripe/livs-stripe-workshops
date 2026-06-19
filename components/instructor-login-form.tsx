@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
-import { AlertCircle, Lock } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Lock } from 'lucide-react'
+import Link from 'next/link'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -26,6 +27,13 @@ export function InstructorLoginForm() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md p-8">
+        <Link
+          href="/"
+          className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back to home
+        </Link>
         <div className="mb-6">
           <div className="mb-6 flex items-center gap-2.5">
             <StripeWordmark variant="foreground" className="h-6 w-auto" />
