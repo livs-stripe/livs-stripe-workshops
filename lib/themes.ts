@@ -57,6 +57,16 @@ export const THEMES: Theme[] = [
     status: 'available',
   },
   {
+    id: 'billing',
+    Icon: RefreshCw,
+    title: 'Billing & Subscriptions',
+    description:
+      'Design and implement recurring revenue with Stripe Billing — from pricing models to dunning, the customer portal, and revenue analytics.',
+    blurb:
+      'A practical tour of Stripe Billing — modeling subscriptions and pricing, invoices and proration, trials and coupons, the customer portal, dunning and revenue recovery, usage-based billing, and billing analytics. For teams launching or scaling recurring revenue.',
+    status: 'available',
+  },
+  {
     id: 'disputes',
     Icon: Scale,
     title: 'Disputes & Chargebacks',
@@ -75,16 +85,6 @@ export const THEMES: Theme[] = [
     blurb:
       'Everything platforms and marketplaces need to know about Stripe Connect — choosing between account types, designing onboarding flows, handling payouts and fees, and managing connected accounts at scale. For teams building multi-party payment products.',
     status: 'coming_soon',
-  },
-  {
-    id: 'billing',
-    Icon: RefreshCw,
-    title: 'Billing & Subscriptions',
-    description:
-      'Design and implement recurring revenue with Stripe Billing — from pricing models to dunning, the customer portal, and revenue analytics.',
-    blurb:
-      'A practical tour of Stripe Billing — modeling subscriptions and pricing, invoices and proration, trials and coupons, the customer portal, dunning and revenue recovery, usage-based billing, and billing analytics. For teams launching or scaling recurring revenue.',
-    status: 'available',
   },
   {
     id: 'radar_for_fraud_teams',

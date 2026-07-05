@@ -15,9 +15,10 @@ export function StripeDashboardButton({
     setLoading(true)
     setError(null)
 
-    // Open the window synchronously in the click handler so browsers don't
-    // treat the later navigation as a popup (async window.open gets blocked).
-    const win = window.open('about:blank', '_blank', 'noopener')
+    // Open the window synchronously so browsers treat it as a user gesture.
+    // Do NOT use 'noopener' here — it causes window.open to return null in
+    // Safari/Firefox, breaking the handle we need to navigate later.
+    const win = window.open('about:blank', '_blank')
 
     try {
       const res = await fetch(`/api/participants/${participantId}/login-link`)
@@ -29,12 +30,11 @@ export function StripeDashboardButton({
         return
       }
 
-      if (data.url) {
-        if (win) {
-          win.location.href = data.url
-        } else {
-          window.open(data.url, '_blank', 'noopener')
-        }
+      if (data.url && win) {
+        win.opener = null
+        win.location.href = data.url
+      } else if (data.url) {
+        window.location.href = data.url
       } else {
         win?.close()
       }

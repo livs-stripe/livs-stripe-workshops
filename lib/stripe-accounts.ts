@@ -459,12 +459,17 @@ export async function provisionSlotsForEvent(
 }
 
 /**
- * Generate a login link for a connected account (on-demand, 5-min TTL).
+ * Generate a login link for a connected account.
+ * Falls back to a direct dashboard URL for non-Express accounts.
  */
 export async function createLoginLink(stripeAccountId: string): Promise<string> {
-  const link = await stripeWithRetry(
-    () => stripe.accounts.createLoginLink(stripeAccountId),
-    { context: `login-link:${stripeAccountId}` },
-  )
-  return link.url
+  try {
+    const link = await stripeWithRetry(
+      () => stripe.accounts.createLoginLink(stripeAccountId),
+      { context: `login-link:${stripeAccountId}` },
+    )
+    return link.url
+  } catch {
+    return `https://dashboard.stripe.com`
+  }
 }

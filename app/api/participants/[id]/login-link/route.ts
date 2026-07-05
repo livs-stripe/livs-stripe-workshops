@@ -6,6 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
+  let stripeAccountId: string | null = null
 
   try {
     const jar = await cookies()
@@ -18,7 +19,6 @@ export async function GET(
       )
     }
 
-    // Check platform key before any DB or Stripe calls
     const platformKey = process.env.STRIPE_SECRET_KEY
     if (!platformKey || !platformKey.startsWith('sk_')) {
       console.error('[login-link] STRIPE_SECRET_KEY missing or invalid')
@@ -28,7 +28,6 @@ export async function GET(
       )
     }
 
-    // Dynamically import heavy dependencies to avoid module-level crashes
     const { db } = await import('@/lib/db')
     const { participants, events } = await import('@/lib/db/schema')
     const { eq } = await import('drizzle-orm')
@@ -49,7 +48,8 @@ export async function GET(
       )
     }
 
-    // Check event is still active
+    stripeAccountId = p.stripeAccountId
+
     if (p.eventId) {
       const [ev] = await db
         .select({ status: events.status })
@@ -65,22 +65,21 @@ export async function GET(
       }
     }
 
-    if (!p.stripeAccountId) {
+    if (!stripeAccountId) {
       return NextResponse.json(
         { error: 'Your Stripe account is still being set up. Wait a moment and try again.', code: 'ACCOUNT_NOT_PROVISIONED' },
         { status: 503 },
       )
     }
 
-    // Create login link using the Stripe API directly (avoid import chain issues)
     const Stripe = (await import('stripe')).default
     const stripe = new Stripe(platformKey, { maxNetworkRetries: 2 })
 
-    const loginLink = await stripe.accounts.createLoginLink(p.stripeAccountId)
+    const loginLink = await stripe.accounts.createLoginLink(stripeAccountId)
     return NextResponse.json({ url: loginLink.url })
   } catch (err: unknown) {
-    // Handle Stripe errors
     const stripeErr = err as { code?: string; statusCode?: number; type?: string; message?: string }
+    const stripeMsg = stripeErr.message ?? ''
 
     if (stripeErr.code === 'account_invalid') {
       return NextResponse.json(
@@ -100,9 +99,14 @@ export async function GET(
         { status: 401 },
       )
     }
+    // Login links only work for Express accounts — fall back to generic dashboard
+    if (stripeMsg.includes('login link') || stripeMsg.includes('Standard') || stripeMsg.includes('not supported')) {
+      return NextResponse.json({ url: 'https://dashboard.stripe.com' })
+    }
 
     console.error('[login-link] Unhandled error:', {
       participantId: id,
+      stripeAccountId,
       error: err instanceof Error ? err.message : String(err),
       code: stripeErr.code,
       type: stripeErr.type,
@@ -110,13 +114,12 @@ export async function GET(
     })
 
     return NextResponse.json(
-      { error: 'Unable to open the Dashboard right now. Try again in a moment.', code: 'UNKNOWN_ERROR' },
+      { error: `Unable to open the Dashboard right now. (${stripeErr.code ?? stripeErr.type ?? 'unknown'})`, code: 'UNKNOWN_ERROR' },
       { status: 500 },
     )
   }
 }
 
-// Support both GET and POST in case frontend uses either method
 export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> },
