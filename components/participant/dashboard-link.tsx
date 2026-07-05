@@ -27,22 +27,7 @@ export function DashboardLink({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[13px] font-medium transition-colors"
-      style={{
-        borderColor: '#E3E8EF',
-        color: '#425466',
-        backgroundColor: '#F8F9FA',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = '#635BFF'
-        e.currentTarget.style.color = '#635BFF'
-        e.currentTarget.style.backgroundColor = '#F4F3FF'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#E3E8EF'
-        e.currentTarget.style.color = '#425466'
-        e.currentTarget.style.backgroundColor = '#F8F9FA'
-      }}
+      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-[13px] font-medium text-secondary-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
     >
       {text}
       <ArrowUpRight className="size-3" />

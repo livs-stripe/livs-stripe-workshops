@@ -49,10 +49,17 @@ export function ChallengeModuleView({
 
   const mod = CHALLENGE_MODULES.find((m) => m.number === selectedModule)!
 
+  const [attackPolling, setAttackPolling] = useState(false)
+
   const { data: progress, mutate } = useSWR<ModuleProgress>(
     `/api/participants/${participant.id}/module-progress/${selectedModule}`,
     fetcher,
-    { refreshInterval: progress?.attack?.status === 'running' ? 2000 : 10000 },
+    {
+      refreshInterval: attackPolling ? 2000 : 10000,
+      onSuccess: (data) => {
+        setAttackPolling(data?.attack?.status === 'running')
+      },
+    },
   )
 
   // Refresh balance periodically

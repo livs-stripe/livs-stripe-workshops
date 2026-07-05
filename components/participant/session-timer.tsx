@@ -8,6 +8,11 @@ function formatRemaining(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
   const m = Math.floor(totalSec / 60)
   const s = totalSec % 60
+  if (m >= 1440) {
+    const d = Math.floor(m / 1440)
+    const h = Math.floor((m % 1440) / 60)
+    return h > 0 ? `${d}d ${h}h` : `${d}d`
+  }
   if (m >= 60) {
     const h = Math.floor(m / 60)
     const mm = m % 60

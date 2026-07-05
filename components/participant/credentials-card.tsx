@@ -37,10 +37,7 @@ function CredentialRow({
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <span
-        className="w-24 shrink-0 text-[13px] uppercase tracking-[0.04em]"
-        style={{ color: '#8898AA' }}
-      >
+      <span className="w-24 shrink-0 text-[13px] uppercase tracking-[0.04em] text-muted-foreground">
         {label}
       </span>
       <span
@@ -55,10 +52,7 @@ function CredentialRow({
           <button
             type="button"
             onClick={onToggle}
-            className="flex size-7 items-center justify-center rounded transition-colors"
-            style={{ color: '#8898AA' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#425466' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#8898AA' }}
+            className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
             aria-label={revealed ? `Hide ${label}` : `Show ${label}`}
           >
             {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -66,10 +60,9 @@ function CredentialRow({
           <button
             type="button"
             onClick={handleCopy}
-            className="flex size-7 items-center justify-center rounded transition-colors"
-            style={{ color: copied ? '#00D924' : '#8898AA' }}
-            onMouseEnter={(e) => { if (!copied) e.currentTarget.style.color = '#425466' }}
-            onMouseLeave={(e) => { if (!copied) e.currentTarget.style.color = '#8898AA' }}
+            className={`flex size-7 items-center justify-center rounded transition-colors ${
+              copied ? 'text-success-bright' : 'text-muted-foreground hover:text-foreground'
+            }`}
             aria-label={`Copy ${label}`}
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
@@ -133,8 +126,7 @@ export function CredentialsCard({
         <button
           type="button"
           onClick={toggleAll}
-          className="shrink-0 text-[13px] font-medium transition-colors hover:underline"
-          style={{ color: '#635BFF', cursor: 'pointer' }}
+          className="shrink-0 cursor-pointer text-[13px] font-medium text-primary transition-colors hover:underline"
         >
           {allRevealed ? 'Hide all' : 'Show all'}
         </button>

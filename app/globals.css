@@ -146,6 +146,31 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  /* Form input used on the join page — focus ring uses brand purple. */
+  .join-input {
+    height: 3rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    padding-inline: 1rem;
+    font-size: 15px;
+    color: var(--foreground);
+    background-color: #fafafa;
+    border: 1.5px solid var(--border);
+    outline: none;
+    transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  }
+  .join-input::placeholder {
+    color: #9ca3af;
+  }
+  .join-input:focus {
+    border-color: var(--primary);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+  .join-input:not(:placeholder-shown) {
+    background-color: white;
+  }
+
   /* Stripe's signature diagonal stripe motif for dark hero panels. */
   .stripe-texture {
     background-image: repeating-linear-gradient(

@@ -124,16 +124,16 @@ export async function createEvent(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim()
   const description = String(formData.get('description') ?? '').trim()
   const customerName = String(formData.get('customerName') ?? '').trim()
-  const customerEmail = String(formData.get('customerEmail') ?? '').trim()
+  const sfOpportunityId = String(formData.get('sfOpportunityId') ?? '').trim()
   const facilitatorNotes = String(formData.get('facilitatorNotes') ?? '').trim()
   const maxParticipants = Number(formData.get('maxParticipants'))
   const durationMinutes = Number(formData.get('durationMinutes'))
   if (!name) throw new Error('Name is required')
-  if (!Number.isInteger(maxParticipants) || maxParticipants < 1 || maxParticipants > 500) {
-    throw new Error('Max participants must be a whole number between 1 and 500')
+  if (!Number.isInteger(maxParticipants) || maxParticipants < 1 || maxParticipants > 100) {
+    throw new Error('Max participants must be a whole number between 1 and 100')
   }
-  if (!Number.isInteger(durationMinutes) || durationMinutes < 5 || durationMinutes > 480) {
-    throw new Error('Duration must be a whole number of minutes between 5 and 480')
+  if (!Number.isInteger(durationMinutes) || durationMinutes < 5 || durationMinutes > 43200) {
+    throw new Error('Duration must be between 5 minutes and 30 days')
   }
 
   // Challenge-only config. Falls back to sensible defaults for workshops.
@@ -173,7 +173,7 @@ export async function createEvent(formData: FormData) {
     durationMinutes,
     sessionEndsAt,
     customerName: customerName || null,
-    customerEmail: customerEmail || null,
+    customerEmail: sfOpportunityId || null,
     facilitatorNotes: facilitatorNotes || null,
     balanceCurrency,
     startingBalanceCents,

@@ -95,7 +95,8 @@ export function CreateEventDialog() {
   const [copied, setCopied] = useState(false)
   const [leaderboard, setLeaderboard] = useState(true)
   const [projector, setProjector] = useState(true)
-  const [sessionDuration, setSessionDuration] = useState(120)
+  const [sessionDuration, setSessionDuration] = useState(120) // always stored in minutes
+  const [durationUnit, setDurationUnit] = useState<'hours' | 'days'>('hours')
 
   const selectedTheme = getTheme(theme)
   const SelectedThemeIcon = selectedTheme?.Icon
@@ -110,6 +111,7 @@ export function CreateEventDialog() {
     setLeaderboard(true)
     setProjector(true)
     setSessionDuration(120)
+    setDurationUnit('hours')
   }
 
   function handleOpenChange(next: boolean) {
@@ -272,17 +274,12 @@ export function CreateEventDialog() {
                 )
               })}
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                toast.success(
-                  'Suggestion noted — themes are added based on SA demand.',
-                )
-              }
+            <a
+              href="mailto:livs@stripe.com?subject=Workshop%20Platform%20Suggestion"
               className="self-start text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
               + Suggest a theme
-            </button>
+            </a>
             <DialogFooter>
               <Button
                 type="button"
@@ -370,12 +367,11 @@ export function CreateEventDialog() {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="customerEmail">Customer email</Label>
+                  <Label htmlFor="sfOpportunityId">Salesforce Opportunity ID</Label>
                   <Input
-                    id="customerEmail"
-                    name="customerEmail"
-                    type="email"
-                    placeholder="team@acme.com"
+                    id="sfOpportunityId"
+                    name="sfOpportunityId"
+                    placeholder="006..."
                   />
                 </div>
               </div>
@@ -401,8 +397,8 @@ export function CreateEventDialog() {
                     type="number"
                     inputMode="numeric"
                     min={1}
-                    max={500}
-                    defaultValue={25}
+                    max={100}
+                    placeholder="1–100"
                     required
                   />
                 </div>
@@ -415,52 +411,112 @@ export function CreateEventDialog() {
                   The event automatically closes when the timer runs out.
                   Participants will be shown an end screen.
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {[
-                    { m: 30, label: '30 min' },
-                    { m: 60, label: '1 hour' },
-                    { m: 120, label: '2 hours' },
-                    { m: 180, label: '3 hours' },
-                    { m: 240, label: '4 hours' },
-                  ].map((opt) => (
+
+                {/* Unit toggle */}
+                <div className="mt-2 flex gap-1 rounded-lg border border-border bg-card p-0.5">
+                  {(['hours', 'days'] as const).map((unit) => (
                     <button
-                      key={opt.m}
+                      key={unit}
                       type="button"
-                      onClick={() => setSessionDuration(opt.m)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                        sessionDuration === opt.m
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:text-foreground'
+                      onClick={() => {
+                        setDurationUnit(unit)
+                        setSessionDuration(unit === 'hours' ? 120 : 1440)
+                      }}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                        durationUnit === unit
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {opt.label}
+                      {unit === 'hours' ? 'Hours' : 'Days'}
                     </button>
                   ))}
                 </div>
+
+                {/* Quick-pick presets */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {durationUnit === 'hours'
+                    ? [
+                        { m: 30, label: '30 min' },
+                        { m: 60, label: '1 hour' },
+                        { m: 120, label: '2 hours' },
+                        { m: 180, label: '3 hours' },
+                        { m: 240, label: '4 hours' },
+                        { m: 480, label: '8 hours' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.m}
+                          type="button"
+                          onClick={() => setSessionDuration(opt.m)}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            sessionDuration === opt.m
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))
+                    : [
+                        { m: 1440, label: '1 day' },
+                        { m: 2880, label: '2 days' },
+                        { m: 4320, label: '3 days' },
+                        { m: 7200, label: '5 days' },
+                        { m: 10080, label: '7 days' },
+                        { m: 20160, label: '14 days' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.m}
+                          type="button"
+                          onClick={() => setSessionDuration(opt.m)}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            sessionDuration === opt.m
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                </div>
+
+                {/* Custom input */}
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
                   <div className="flex flex-1 flex-col gap-2">
                     <Label htmlFor="customDuration" className="text-xs">
-                      Custom (minutes)
+                      Custom ({durationUnit === 'hours' ? 'minutes' : 'days'})
                     </Label>
                     <Input
                       id="customDuration"
                       type="number"
                       inputMode="numeric"
-                      min={5}
-                      max={480}
-                      step={5}
-                      placeholder="e.g. 150"
+                      min={durationUnit === 'hours' ? 5 : 1}
+                      max={durationUnit === 'hours' ? 1440 : 30}
+                      step={durationUnit === 'hours' ? 5 : 1}
+                      placeholder={durationUnit === 'hours' ? 'e.g. 150' : 'e.g. 5'}
                       onChange={(e) => {
                         const v = Number(e.target.value)
-                        if (Number.isInteger(v) && v >= 5 && v <= 480) {
-                          setSessionDuration(v)
+                        if (durationUnit === 'hours') {
+                          if (Number.isInteger(v) && v >= 5 && v <= 1440) {
+                            setSessionDuration(v)
+                          }
+                        } else {
+                          if (Number.isInteger(v) && v >= 1 && v <= 30) {
+                            setSessionDuration(v * 1440)
+                          }
                         }
                       }}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground sm:pb-2">
-                    Selected: <span className="font-mono text-foreground">{sessionDuration}</span>{' '}
-                    minutes
+                    Selected:{' '}
+                    <span className="font-mono text-foreground">
+                      {sessionDuration >= 1440
+                        ? `${Math.round((sessionDuration / 1440) * 10) / 10} day${sessionDuration >= 2880 ? 's' : ''}`
+                        : sessionDuration >= 60
+                          ? `${Math.round((sessionDuration / 60) * 10) / 10} hour${sessionDuration >= 120 ? 's' : ''}`
+                          : `${sessionDuration} min`}
+                    </span>
                   </p>
                 </div>
               </div>
