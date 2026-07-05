@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
-import { isInstructor, createSession } from '@/lib/instructor-auth'
+import { isInstructor } from '@/lib/instructor-auth'
 
 export default async function SignInPage() {
-  if (!(await isInstructor())) {
-    await createSession()
+  if (await isInstructor()) {
+    redirect('/sa')
   }
-  redirect('/sa')
+  // Cookie writes aren't allowed in Server Components — route through
+  // the API handler which can set the session cookie in a Route Handler.
+  redirect('/api/sa/auto-login')
 }

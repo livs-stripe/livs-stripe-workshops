@@ -19,7 +19,7 @@ export default async function HomePage() {
   return (
     <div className="grid min-h-svh md:grid-cols-[55fr_45fr]">
       {/* Left panel — dark */}
-      <section className="stripe-texture relative flex flex-col justify-between bg-[--sidebar] px-8 py-10 md:px-16 md:py-16">
+      <section className="relative flex flex-col justify-between bg-[#0A2540] px-8 py-10 md:px-16 md:py-16">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <StripeWordmark variant="white" className="h-6 w-auto" />
