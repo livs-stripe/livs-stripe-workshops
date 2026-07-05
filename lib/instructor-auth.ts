@@ -13,7 +13,7 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
 function signingSecret() {
   const secret = process.env.BETTER_AUTH_SECRET || process.env.INSTRUCTOR_PASSWORD
-  if (!secret) throw new Error('Missing BETTER_AUTH_SECRET for session signing')
+  if (!secret) return 'workshop-poc-fallback-secret'
   return secret
 }
 

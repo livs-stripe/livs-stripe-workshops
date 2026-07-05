@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { ChallengeStepCard } from '@/components/participant/challenge-step-card'
-import { CHALLENGE_MODULES, STARTING_BALANCE_CENTS } from '@/lib/challenge-modules'
+import { CHALLENGE_MODULES as FRAUD_CHALLENGE_MODULES, STARTING_BALANCE_CENTS as FRAUD_STARTING_BALANCE } from '@/lib/challenge-modules'
+import { getChallengeContent } from '@/lib/theme-content'
 import { Shield, Trophy, TrendingDown } from 'lucide-react'
 
 type Participant = {
@@ -40,10 +41,16 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 export function ChallengeModuleView({
   participant,
   event,
+  eventTheme,
 }: {
   participant: Participant
   event: EventRow
+  eventTheme?: string
 }) {
+  const themeContent = getChallengeContent(eventTheme ?? 'fraud_radar')
+  const CHALLENGE_MODULES = themeContent?.challengeModules ?? FRAUD_CHALLENGE_MODULES
+  const STARTING_BALANCE_CENTS = themeContent?.startingBalanceCents ?? FRAUD_STARTING_BALANCE
+
   const [selectedModule, setSelectedModule] = useState(1)
   const [balance, setBalance] = useState(participant.currentBalance)
 

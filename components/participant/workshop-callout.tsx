@@ -5,6 +5,8 @@ import {
   TriangleAlert,
   BookOpenText,
   ShieldAlert,
+  CreditCard,
+  RefreshCw,
 } from 'lucide-react'
 
 const CONFIG: Record<
@@ -38,6 +40,18 @@ const CONFIG: Record<
   'fraud-fact': {
     label: 'Fraud fact',
     Icon: ShieldAlert,
+    cls: 'border-primary/30 bg-primary/[0.05]',
+    iconCls: 'text-primary',
+  },
+  'stripe-fact': {
+    label: 'Stripe fact',
+    Icon: CreditCard,
+    cls: 'border-primary/30 bg-primary/[0.05]',
+    iconCls: 'text-primary',
+  },
+  'billing-fact': {
+    label: 'Billing fact',
+    Icon: RefreshCw,
     cls: 'border-primary/30 bg-primary/[0.05]',
     iconCls: 'text-primary',
   },

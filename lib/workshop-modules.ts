@@ -9,6 +9,8 @@ export type CalloutKind =
   | 'warning'
   | 'explanation'
   | 'fraud-fact'
+  | 'stripe-fact'
+  | 'billing-fact'
 
 export type Callout = {
   kind: CalloutKind

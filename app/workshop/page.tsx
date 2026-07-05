@@ -105,6 +105,7 @@ export default async function WorkshopPage() {
           id: data.event.id,
           name: data.event.name,
           status: data.event.status,
+          eventTheme: data.event.eventTheme,
           ...eventTiming,
         },
         facilitatorName: INSTRUCTOR_NAME,

@@ -173,13 +173,23 @@
 
   /* Stripe's signature diagonal stripe motif for dark hero panels. */
   .stripe-texture {
+    position: relative;
+  }
+  .stripe-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: repeating-linear-gradient(
       105deg,
-      rgba(255, 255, 255, 0.05) 0px,
-      rgba(255, 255, 255, 0.05) 2px,
-      transparent 2px,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
       transparent 14px
     );
+    pointer-events: none;
+  }
+  .stripe-texture > * {
+    position: relative;
   }
 }
 

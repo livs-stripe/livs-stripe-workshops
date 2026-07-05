@@ -51,10 +51,10 @@ export const THEMES: Theme[] = [
     Icon: CreditCard,
     title: 'Online Payments 101',
     description:
-      'Core Stripe payments concepts — PaymentIntents, webhooks, testing, and the payment lifecycle.',
+      'A hands-on guide to accepting payments on the internet with Stripe — from your first API call to a production-ready integration.',
     blurb:
-      'A foundational walkthrough of how money moves through Stripe. Covers PaymentIntents, the full payment lifecycle, webhooks, idempotency, and testing strategies. Designed for engineers and product teams who are new to Stripe and want a confident mental model before going live.',
-    status: 'coming_soon',
+      'A foundational walkthrough of how money moves through Stripe. Covers PaymentIntents, Stripe.js and Elements, the full payment lifecycle, webhooks, idempotency, payment methods, 3D Secure, and testing strategies. Designed for engineers and product teams who are new to Stripe and want a confident mental model before going live.',
+    status: 'available',
   },
   {
     id: 'disputes',
@@ -81,10 +81,10 @@ export const THEMES: Theme[] = [
     Icon: RefreshCw,
     title: 'Billing & Subscriptions',
     description:
-      'Subscription models, invoices, proration, trials, and revenue recovery.',
+      'Design and implement recurring revenue with Stripe Billing — from pricing models to dunning, the customer portal, and revenue analytics.',
     blurb:
-      'A practical tour of Stripe Billing — modeling subscriptions and pricing, invoices and proration, trials and coupons, and recovering revenue from failed payments. For teams launching or scaling recurring revenue.',
-    status: 'coming_soon',
+      'A practical tour of Stripe Billing — modeling subscriptions and pricing, invoices and proration, trials and coupons, the customer portal, dunning and revenue recovery, usage-based billing, and billing analytics. For teams launching or scaling recurring revenue.',
+    status: 'available',
   },
   {
     id: 'radar_for_fraud_teams',

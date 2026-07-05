@@ -4,7 +4,8 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { saveWorkshopProgress, leaveWorkshop } from '@/app/actions/participant'
-import { WORKSHOP_MODULES, SCORED_MODULES } from '@/lib/workshop-modules'
+import { WORKSHOP_MODULES as FRAUD_WORKSHOP_MODULES, SCORED_MODULES as FRAUD_SCORED_MODULES } from '@/lib/workshop-modules'
+import { getWorkshopContent } from '@/lib/theme-content'
 import { getTheme } from '@/lib/themes'
 import { WorkshopCallout } from '@/components/participant/workshop-callout'
 import { DashboardGif } from '@/components/participant/dashboard-gif'
@@ -83,6 +84,10 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
   const { participant, event, facilitatorName } = initialData
   const eventTheme = getTheme(event.eventTheme)
   const EventThemeIcon = eventTheme?.Icon
+
+  const themeContent = getWorkshopContent(event.eventTheme)
+  const WORKSHOP_MODULES = themeContent?.workshopModules ?? FRAUD_WORKSHOP_MODULES
+  const SCORED_MODULES = themeContent?.scoredModules ?? FRAUD_SCORED_MODULES
 
   const [progress, setProgress] = useState<Record<string, ProgressRow>>(() => {
     const m: Record<string, ProgressRow> = {}

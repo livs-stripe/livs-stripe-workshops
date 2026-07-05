@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { submitModule, leaveWorkshop } from '@/app/actions/participant'
 import {
-  MODULES,
-  getModule,
+  MODULES as FRAUD_MODULES,
+  getModule as getFraudModule,
   getAttackWaveType,
-  TOTAL_POSSIBLE_SCORE,
+  TOTAL_POSSIBLE_SCORE as FRAUD_TOTAL_SCORE,
 } from '@/lib/workshop-content'
+import { getQuizContent } from '@/lib/theme-content'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { getTheme } from '@/lib/themes'
 import { Card } from '@/components/ui/card'
@@ -99,6 +100,11 @@ export function WorkshopExperience({
   const { participant, event } = initialData
   const eventTheme = getTheme(event.eventTheme)
   const EventThemeIcon = eventTheme?.Icon
+
+  const quizContent = getQuizContent(event.eventTheme)
+  const MODULES = quizContent?.modules ?? FRAUD_MODULES
+  const TOTAL_POSSIBLE_SCORE = quizContent?.totalScore ?? FRAUD_TOTAL_SCORE
+  const getModule = (id: string) => MODULES.find((m) => m.id === id) ?? getFraudModule(id)
 
   const [progress, setProgress] = useState<ProgressRow[]>(initialData.progress)
   const [score, setScore] = useState(participant.score)

@@ -30,6 +30,7 @@ type EventRow = {
   id: string
   name: string
   status: string
+  eventTheme?: string
   sessionEndsAt: string
   createdAt: string
   durationMinutes: number
@@ -110,6 +111,7 @@ export function ChallengeExperience({ initialData }: { initialData: InitialData 
         <ChallengeModuleView
           participant={participant}
           event={{ id: event.id, name: event.name, status: event.status }}
+          eventTheme={event.eventTheme}
         />
       </div>
 
