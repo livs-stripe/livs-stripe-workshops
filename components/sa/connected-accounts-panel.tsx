@@ -268,7 +268,7 @@ export function ConnectedAccountsPanel({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary"
                   >
-                    Log in as admin <ExternalLink className="size-3.5" />
+                    View account <ExternalLink className="size-3.5" />
                   </a>
                 ) : (
                   <span className="inline-flex items-center rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground">

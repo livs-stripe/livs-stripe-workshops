@@ -27,8 +27,8 @@ export function businessNameForSlot(slot: number): string {
 
 export function dashboardUrlForAccount(stripeAccountId: string): string {
   const isTest = (process.env.STRIPE_SECRET_KEY ?? '').startsWith('sk_test')
-  const base = `https://dashboard.stripe.com/${stripeAccountId}`
-  return isTest ? `${base}/test` : base
+  const mode = isTest ? '/test' : ''
+  return `https://dashboard.stripe.com${mode}/connect/accounts/${stripeAccountId}`
 }
 
 // ---------------------------------------------------------------------------
