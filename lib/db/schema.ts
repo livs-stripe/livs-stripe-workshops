@@ -76,7 +76,7 @@ export const events = pgTable('events', {
   // Workshop = guided learning (no scoring). Challenge = gamified competition.
   eventType: text('eventType').notNull().default('challenge'), // workshop | challenge
   // Topic theme. Determines module content + participant experience.
-  // fraud_radar | online_payments | disputes | connect | billing | radar_for_fraud_teams
+  // fraud_radar | online_payments | disputes | connect | billing
   eventTheme: text('eventTheme').notNull().default('fraud_radar'),
   maxParticipants: integer('maxParticipants').notNull().default(25),
   durationMinutes: integer('durationMinutes').notNull().default(120),

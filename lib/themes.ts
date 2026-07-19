@@ -10,7 +10,6 @@ import {
   Scale,
   Link2,
   RefreshCw,
-  Microscope,
 } from 'lucide-react'
 
 export type ThemeId =
@@ -19,7 +18,6 @@ export type ThemeId =
   | 'disputes'
   | 'connect'
   | 'billing'
-  | 'radar_for_fraud_teams'
 
 export type ThemeStatus = 'available' | 'coming_soon'
 
@@ -41,9 +39,9 @@ export const THEMES: Theme[] = [
     Icon: Shield,
     title: 'Fraud & Radar',
     description:
-      'Participants learn to protect a live Stripe account using Radar rules, block lists, 3DS, and dispute management.',
+      'From first rules to advanced strategy: Radar rules, block lists, 3DS, disputes, ML scores, review queues, and team workflows.',
     blurb:
-      'The flagship hands-on theme. Participants take control of a live Stripe account and defend it against payment fraud by tuning Radar risk scores, writing custom rules, managing block and allow lists, enforcing 3D Secure, and resolving disputes. Ideal for risk, payments, and operations teams who want practical Radar experience.',
+      'The flagship hands-on theme. Participants take control of a live Stripe account and defend it against payment fraud, progressing from basics through advanced team operations. Covers Radar risk scores, custom rules, block and allow lists, 3D Secure, disputes, and then goes deeper into the machine learning behind risk scoring, review queue workflows, rule versioning strategy, and how fraud analysts collaborate at scale. Suitable for anyone from first-time Radar users to dedicated fraud teams.',
     status: 'available',
   },
   {
@@ -84,16 +82,6 @@ export const THEMES: Theme[] = [
       'Building platforms and marketplaces: account types, payouts, and onboarding flows.',
     blurb:
       'Everything platforms and marketplaces need to know about Stripe Connect: choosing between account types, designing onboarding flows, handling payouts and fees, and managing connected accounts at scale. For teams building multi-party payment products.',
-    status: 'coming_soon',
-  },
-  {
-    id: 'radar_for_fraud_teams',
-    Icon: Microscope,
-    title: 'Radar for Fraud Teams',
-    description:
-      'Advanced Radar: machine learning, custom models, review queues, and team workflows.',
-    blurb:
-      'The advanced companion to Fraud & Radar, aimed at dedicated fraud teams. Goes deep on the machine-learning behind risk scores, custom rule strategy, review queue workflows, and how analysts collaborate at scale. For mature fraud operations.',
     status: 'coming_soon',
   },
 ]

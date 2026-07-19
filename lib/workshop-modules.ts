@@ -832,6 +832,206 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     ],
     doneLabel: `I've audited my full rule set and set up a dispute webhook`,
   },
+  {
+    id: 'ml-risk-scores',
+    number: 10,
+    title: 'How Radar ML Scores Work',
+    estMinutes: 10,
+    intro:
+      `Every payment processed through Stripe gets a risk score from 0 to 100. This score comes from a machine learning model trained on data from millions of businesses. Understanding how the model works, what it sees, and where it has blind spots helps you write smarter rules and avoid fighting the model with your own logic.`,
+    narrative:
+      `Your manager asked a simple question at standup: "How does Radar actually decide what's risky?" You realized you've been writing rules on top of a system you don't fully understand. Time to look under the hood.`,
+    overviewAddition: `Understanding the ML model means writing rules that complement it instead of duplicating it.`,
+    steps: [
+      {
+        title: 'Understand the two-layer system',
+        body: `Radar has two layers working in parallel. The first is Stripe's ML model, which scores every payment automatically. The second is your custom rules, which you've been writing throughout this workshop. Both evaluate every payment independently.\n\nThe ML model runs first and assigns a risk score. Your rules then evaluate using that score (and hundreds of other attributes). A payment can be blocked by the ML model alone, by your rules alone, or by both.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
+        callouts: [
+          {
+            kind: 'explanation',
+            text: `The ML model is trained on fraud patterns across all Stripe merchants globally. It sees signals you can't access in rules, like cross-merchant velocity patterns (how many times a card was declined at other businesses today) and issuer-level fraud trends. Your rules add business-specific logic the model can't learn on its own.`,
+          },
+        ],
+      },
+      {
+        title: 'Explore the risk score distribution',
+        body: `Go to **Radar > Overview** in your Dashboard. Look at the block breakdown chart. Click into the different score ranges to see how payments distribute across the 0-100 scale.\n\nMost legitimate payments cluster in the 0-20 range. Fraudulent payments tend to appear in the 65-100 range. The 20-65 range is where the most interesting decisions happen, as these are payments where the model isn't confident either way.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
+        gif: {
+          caption: 'Record: the Radar overview showing the risk score distribution chart.',
+          screen: 'Radar → Overview → Score distribution',
+        },
+        callouts: [
+          {
+            kind: 'fraud-fact',
+            text: `Stripe's ML model evaluates over 1,000 signals per payment, including card fingerprint behavior across the network, device fingerprinting signals, IP geolocation patterns, and transaction velocity across all Stripe merchants. No single merchant could build this dataset alone.`,
+          },
+        ],
+      },
+      {
+        title: 'Read the risk insights on a payment',
+        body: `Go to **Payments** and click on any payment with a risk score above 50. In the Radar section, expand "Risk insights" to see which specific signals drove the score up or down.\n\nEach insight shows a signal name and whether it increased or decreased risk. Signals like "Card used from a new country" increase risk. Signals like "Customer has a history of successful payments" decrease it.`,
+        dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
+        gif: {
+          caption: 'Record: expanding risk insights on a payment with an elevated score.',
+          screen: 'Payment detail → Radar → Risk insights',
+        },
+      },
+      {
+        title: 'Understand model blind spots',
+        body: `The ML model is powerful but it doesn't know everything about your business. It can't see:\n\n- Whether a customer passed your KYC checks\n- Whether a deposit is connected to a promotion or bonus\n- Whether an account was created today or six months ago in your system\n- Whether a customer's betting behavior looks unusual for their profile\n\nThis is exactly why custom rules and metadata exist. Your rules fill the gaps the model can't cover. The best fraud strategies use the model for broad pattern detection and custom rules for business-specific logic.`,
+        callouts: [
+          {
+            kind: 'tip',
+            text: `Avoid writing rules that duplicate what the model already does well. If you write a rule for "block if card country doesn't match IP country," you're likely catching payments the model already scores as high-risk. Instead, focus your rules on signals only you have access to, like metadata fields, customer tiers, and internal verification status.`,
+          },
+        ],
+      },
+      {
+        title: 'Compare ML blocks vs rule blocks',
+        body: `Go back to **Radar > Overview**. In the block breakdown chart, compare how many payments were blocked by Stripe's ML model versus your custom rules. A healthy split shows both contributing. If the ML model is blocking everything, your rules may be redundant. If your rules are blocking everything, you may be too aggressive and the model would have caught most of those anyway.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
+        gif: {
+          caption: 'Record: the block breakdown showing ML model vs custom rule contribution.',
+          screen: 'Radar → Overview → Block breakdown',
+        },
+      },
+    ],
+    doneLabel: `I understand how Radar's ML scoring works and where custom rules add value`,
+  },
+  {
+    id: 'review-queues',
+    number: 11,
+    title: 'Review Queue Workflows',
+    estMinutes: 12,
+    intro:
+      `Blocking and allowing are binary decisions. Review rules create a third option: flag a payment for human inspection without declining it. For fraud teams handling volume, the review queue is where the most nuanced decisions happen. This module covers how to build an efficient review workflow.`,
+    narrative:
+      `BetFlow's support team has been complaining. They keep getting emails from customers whose deposits were blocked. Some are clearly fraudulent, but some look legitimate. Your manager wants you to set up a proper review process instead of just blocking everything above a threshold.`,
+    overviewAddition: `Moving from "block everything suspicious" to "block the obvious, review the rest."`,
+    steps: [
+      {
+        title: 'Find the Reviews section',
+        body: `Go to **Radar > Reviews** in your Dashboard. This is where payments flagged by your Review rules appear. Each entry shows the payment amount, customer email, risk score, and the rule that triggered the review.`,
+        dashboardLink: { label: 'Radar Reviews', url: 'https://dashboard.stripe.com/radar/reviews' },
+        gif: {
+          caption: 'Record: the Radar Reviews queue showing flagged payments.',
+          screen: 'Radar → Reviews',
+        },
+        callouts: [
+          {
+            kind: 'info',
+            text: `Payments in review are not held or delayed by default. The charge goes through normally, but it's flagged in your queue for inspection. If you determine it's fraud after review, you can refund it. This approach avoids blocking legitimate customers while still catching fraud that slips past your block rules.`,
+          },
+        ],
+      },
+      {
+        title: 'Write targeted review rules',
+        body: `Go to **Radar > Rules** and create Review rules that catch the gray area between "clearly legitimate" and "clearly fraud." Good review rule candidates:\n\n- \`risk_score > 50 and risk_score < 75\` (medium-risk payments)\n- \`is_new_customer = true and amount > 10000\` (large first-time deposits)\n- \`card_country != ip_country\` (geographic mismatch)\n\nThese rules flag payments worth a second look without blocking customers outright.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
+        gif: {
+          caption: 'Record: adding multiple review rules for different risk scenarios.',
+          screen: 'Radar → Rules → Review section',
+        },
+      },
+      {
+        title: 'Review a flagged payment',
+        body: `In the Reviews queue, click on a flagged payment. Look at the full picture: the risk score, risk insights, customer email, card details, IP location, and any metadata. Then make a decision: Approve (it's legitimate) or Refund (it's fraud).\n\nWhen reviewing, ask yourself:\n- Does the email look like a real person or a throwaway?\n- Does the card country match the IP country?\n- Is the amount unusual for this type of customer?\n- Are there multiple payments from the same card or email recently?`,
+        gif: {
+          caption: 'Record: reviewing a flagged payment and approving or refunding it.',
+          screen: 'Radar → Reviews → Payment review',
+        },
+      },
+      {
+        title: 'Set up review SLAs',
+        body: `For a real fraud operation, review queue discipline matters. Define a target response time for your team. For example:\n\n- High-value payments (over $500): review within 1 hour\n- Medium-value payments ($100-$500): review within 4 hours\n- Low-value payments (under $100): review within 24 hours\n\nUse the dispute webhook you set up earlier to get real-time alerts. Disputes have hard deadlines, and the faster you respond, the better your win rate.`,
+        callouts: [
+          {
+            kind: 'tip',
+            text: `If your review queue is consistently backed up, your review rules are probably too broad. Tighten the criteria to reduce volume and focus on the payments that genuinely need human judgment. A manageable queue size is 20-50 reviews per day per analyst.`,
+          },
+        ],
+      },
+      {
+        title: 'Use review outcomes to improve rules',
+        body: `After reviewing payments for a while, patterns emerge. If you consistently approve payments from a certain customer segment, add an Allow rule for that segment. If you consistently refund payments matching a pattern, add a Block rule.\n\nThe review queue is a feedback loop: it shows you where your rules have gaps and helps you calibrate the boundary between block and allow over time.`,
+        callouts: [
+          {
+            kind: 'explanation',
+            text: `The best fraud teams treat their review queue as a data source, not just a task list. Track your approve/refund ratio over time. If you're approving 90%+ of reviewed payments, your review rules are too aggressive and you're wasting analyst time. If you're refunding 50%+, consider converting some review rules to block rules.`,
+          },
+        ],
+      },
+    ],
+    doneLabel: `I've set up review rules and understand the review queue workflow`,
+  },
+  {
+    id: 'rule-strategy-at-scale',
+    number: 12,
+    title: 'Rule Strategy & Team Operations',
+    estMinutes: 10,
+    intro:
+      `A handful of rules is easy to manage. Fifty rules written by three different analysts over six months is a maintenance problem. This module covers how fraud teams organize, version, test, and evolve their rule sets without breaking things.`,
+    narrative:
+      `BetFlow is hiring two more fraud analysts next month. Your manager asked you to document how the rules work so the new hires can contribute without accidentally blocking half the customer base. You need a system, not just rules.`,
+    overviewAddition: `Scaling from one analyst to a team means building process around your rules.`,
+    steps: [
+      {
+        title: 'Organize rules by purpose',
+        body: `Go to **Radar > Rules** and look at your full rule set. Group your rules mentally into categories:\n\n- **Baseline rules**: risk_level = 'highest' and similar defaults that every account should have\n- **Velocity rules**: anything counting charges per card, IP, or email over time\n- **Identity rules**: KYC verification, email domain blocks, metadata checks\n- **Incident rules**: specific IPs or cards added during an active attack\n- **Exception rules**: allow rules for VIP customers or known-good patterns\n\nWhen a new analyst joins, they should be able to look at the rules page and understand the strategy without reading a separate document.`,
+        dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
+        gif: {
+          caption: 'Record: the full rules page organized by rule purpose categories.',
+          screen: 'Radar → Rules → Full organized view',
+        },
+      },
+      {
+        title: 'Test before you deploy',
+        body: `Before adding or changing a rule, always use "See payments this rule would have affected" from the three-dot menu. This shows you how many historical payments the rule would have blocked or reviewed.\n\nLook at the results carefully. If a new rule would have blocked 500 payments last month, check whether those were actually fraudulent. A rule that blocks 500 payments but only catches 50 fraudulent ones has a 90% false positive rate and will hurt your customers.`,
+        gif: {
+          caption: 'Record: testing a rule against historical data before deploying it.',
+          screen: 'Radar → Rules → Test against history',
+        },
+        callouts: [
+          {
+            kind: 'warning',
+            text: `Never deploy a rule during a live attack without testing it first. In the heat of an incident it's tempting to add aggressive rules quickly. Take 30 seconds to check the historical impact. A rule that blocks 2% of all traffic instead of just the attack traffic will cause more damage than the fraud itself.`,
+          },
+        ],
+      },
+      {
+        title: 'Build a rule change process',
+        body: `For a team environment, every rule change should follow a simple process:\n\n1. **Identify the problem**: what fraud pattern are you seeing?\n2. **Draft the rule**: write the rule in the editor but don't save yet\n3. **Test against history**: check what it would have caught and what it would have blocked incorrectly\n4. **Deploy**: save the rule and monitor the block rate for the next 24 hours\n5. **Review**: after a week, check the rule's impact on block rate, dispute rate, and false positives\n\nFor high-impact rules (anything expected to block more than 0.5% of traffic), get a second opinion from another analyst before deploying.`,
+        callouts: [
+          {
+            kind: 'tip',
+            text: `Keep a simple log of rule changes. Even a shared spreadsheet with date, analyst, rule description, and reason is better than nothing. When something goes wrong six months later, you'll want to know who added what and why.`,
+          },
+        ],
+      },
+      {
+        title: 'Monitor rule performance over time',
+        body: `Go to **Radar > Overview** in your Dashboard. Track these metrics weekly:\n\n- **Block rate**: percentage of payments blocked. Should be stable unless you change rules or face new attack patterns\n- **Dispute rate**: percentage of payments that result in disputes. Should decrease as your rules improve\n- **False positive rate**: estimated percentage of blocked payments that were legitimate. Hard to measure exactly, but customer complaints and support tickets are a proxy\n\nIf your block rate spikes without a corresponding attack, a rule is probably too broad. If your dispute rate spikes, your rules aren't catching enough.`,
+        dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
+        gif: {
+          caption: 'Record: Radar overview metrics showing block rate and dispute rate trends.',
+          screen: 'Radar → Overview → Metrics trends',
+        },
+      },
+      {
+        title: 'Plan for incident response',
+        body: `When an attack hits, your team needs a playbook:\n\n1. **Detect**: set up alerts via webhooks for unusual spike in charges or declines\n2. **Assess**: check Payments for the pattern. What do the charges have in common?\n3. **Respond**: add targeted block rules. Use metadata and IP rules for precision, not broad risk score thresholds\n4. **Clean up**: after the attack stops, review the rules you added. Keep the ones that have long-term value, remove the ones that were incident-specific\n5. **Debrief**: document what happened, what worked, and what you'd do differently\n\nThe DDoS simulation you ran earlier was practice for this exact scenario.`,
+        callouts: [
+          {
+            kind: 'fraud-fact',
+            text: `Fraud teams that have a documented incident response process resolve attacks 3x faster than those that improvise. The difference isn't skill, it's having a checklist to follow when adrenaline is high and thinking clearly is hard.`,
+          },
+        ],
+      },
+    ],
+    doneLabel: `I understand how to organize rules, test changes, and run a fraud team operation`,
+  },
 ]
 
 export const SCORED_MODULES = WORKSHOP_MODULES.filter((m) => !m.isPrerequisite)
