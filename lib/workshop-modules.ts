@@ -61,7 +61,7 @@ export const GETTING_STARTED_MODULE: WorkshopModule = {
   title: 'Getting Started',
   estMinutes: 5,
   isPrerequisite: true,
-  intro: `You have joined as a participant in this workshop. Before the first module, take five minutes to get your Stripe test account open and familiarise yourself with where things are. Everything in this workshop happens inside that account.`,
+  intro: `You've joined as a participant in this workshop. Before the first module, take five minutes to get your Stripe test account open and familiarize yourself with where things are. Everything in this workshop happens inside that account.`,
   narrative: `You joined BetFlow's payments team three days ago. The previous fraud analyst left without documentation. Your manager has pointed you at Stripe and told you to work out what is going on. This is your account.`,
   steps: [
     {
@@ -71,12 +71,12 @@ export const GETTING_STARTED_MODULE: WorkshopModule = {
     },
     {
       title: 'Sign in with your credentials',
-      body: `Your test account credentials are shown below. You will need these if you are prompted to verify your identity or access the account directly at dashboard.stripe.com.`,
+      body: `Your test account credentials are shown below. You'll need these if you're prompted to verify your identity or access the account directly at dashboard.stripe.com.`,
       renderCredentialsCard: true,
     },
     {
       title: 'Get familiar with the Dashboard',
-      body: `Once you are in, take a look around. The left sidebar is how you navigate. The main sections you will use today are Payments, Radar, and Disputes. You do not need to do anything yet — just make sure you can see them.`,
+      body: `Once you're in, take a look around. The left sidebar is how you navigate. The main sections you'll use today are Payments, Radar, and Disputes. You don't need to do anything yet, just make sure you can see them.`,
       gif: {
         caption: 'Record: the Stripe Dashboard home screen with the left sidebar visible, highlighting Payments, Radar, and Disputes in the navigation.',
         screen: 'Dashboard → Home',
@@ -84,7 +84,7 @@ export const GETTING_STARTED_MODULE: WorkshopModule = {
     },
     {
       title: 'Keep the Dashboard open',
-      body: `Keep your Stripe Dashboard open in its own tab for the rest of the workshop. Each module will link directly to the relevant section, so you will not need to navigate manually — just click the link and it takes you straight there.`,
+      body: `Keep your Stripe Dashboard open in its own tab for the rest of the workshop. Each module will link directly to the relevant section, so you won't need to navigate manually. Just click the link and it takes you straight there.`,
     },
   ],
   doneLabel: `I've set up my Stripe Dashboard and I'm ready to start`,
@@ -98,14 +98,14 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Getting Oriented in Stripe Radar',
     estMinutes: 5,
     intro:
-      `Stripe Radar is built into every Stripe account — no setup required. Before writing any rules, explore what it shows you and understand how it evaluates payments.`,
+      `Stripe Radar is built into every Stripe account with no setup required. Before writing any rules, explore what it shows you and understand how it evaluates payments.`,
     narrative:
-      `Before you can fix anything, you need to understand what you are looking at. BetFlow has been on Stripe for two years and nobody has ever looked at the Radar section. Start there.`,
+      `Before you can fix anything, you need to understand what you're looking at. BetFlow has been on Stripe for two years and nobody has ever looked at the Radar section. Start there.`,
     overviewAddition: `This is your first look at the data BetFlow has been generating for two years.`,
     steps: [
       {
         title: 'Open Radar',
-        body: `Open Radar in your Dashboard. You will land on the overview page showing recent charge activity and block rates.`,
+        body: `Open Radar in your Dashboard. You'll land on the overview page showing recent charge activity and block rates.`,
         dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
           caption: 'Record: opening the Radar overview page in the Stripe Dashboard.',
@@ -128,13 +128,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'tip',
-            text: `Most accounts start with a block rate of 0% and a review rate of 0% — you haven't written any rules yet. By the end of today, these numbers will be meaningful.`,
+            text: `Most accounts start with a block rate of 0% and a review rate of 0% because you haven't written any rules yet. By the end of today, these numbers will be meaningful.`,
           },
         ],
       },
       {
         title: `Find a payment's risk score`,
-        body: `Open Payments in your Dashboard. Click on any charge. Scroll down to the Radar section on the right side. You will see a risk score (0-100) and a risk level label: normal, elevated, or highest.`,
+        body: `Open Payments in your Dashboard. Click on any charge. Scroll down to the Radar section on the right side. You'll see a risk score (0-100) and a risk level label: normal, elevated, or highest.`,
         dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
         gif: {
           caption: 'Record: clicking a payment, scrolling to the Radar section, and highlighting the risk score.',
@@ -143,7 +143,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `The risk score is a percentile — a score of 72 means Stripe considers this payment riskier than 72% of all payments it sees globally. Stripe's model is trained on hundreds of billions of dollars of payment data across millions of businesses.`,
+            text: `The risk score is a percentile: a score of 72 means Stripe considers this payment riskier than 72% of all payments it sees globally. Stripe's model is trained on hundreds of billions of dollars of payment data across millions of businesses.`,
           },
         ],
       },
@@ -163,7 +163,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Browse the Attributes library',
-        body: `Open Radar Rules in your Dashboard. Click "New rule". In the rule editor, open the Attributes panel on the right. Browse through the available attributes — note the categories: card, customer, IP, payment, velocity.`,
+        body: `Open Radar Rules in your Dashboard. Click "New rule". In the rule editor, open the Attributes panel on the right. Browse through the available attributes and note the categories: card, customer, IP, payment, velocity.`,
         dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
           caption: 'Record: opening the rule editor and browsing the Attributes panel, showing card/customer/IP/velocity categories.',
@@ -172,7 +172,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'fraud-fact',
-            text: `Did you know: Stripe can detect whether a card is being used from an anonymous proxy or VPN, the number of times a card has been charged in the last 24 hours across ALL Stripe merchants (not just yours), and whether the billing address matches the card issuer's records — all without you collecting any of this data yourself.`,
+            text: `Stripe can detect whether a card is being used from an anonymous proxy or VPN, the number of times a card has been charged in the last 24 hours across ALL Stripe merchants (not just yours), and whether the billing address matches the card issuer's records. All of this works without you collecting any of this data yourself.`,
           },
         ],
       },
@@ -192,7 +192,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     steps: [
       {
         title: 'Open the Rules page',
-        body: `Open Radar Rules in your Dashboard. You will see three sections: Block, Review, and Allow. Rules in each section evaluate top-to-bottom — the first matching rule wins.`,
+        body: `Open Radar Rules in your Dashboard. You'll see three sections: Block, Review, and Allow. Rules in each section evaluate top-to-bottom, and the first matching rule wins.`,
         dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
           caption: 'Record: the Radar Rules page showing the Block, Review, and Allow sections.',
@@ -201,13 +201,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `Block rules decline the payment immediately. Review rules flag it for manual inspection but let it through (or hold it, depending on your settings). Allow rules bypass all other matching rules — useful for trusted customers.`,
+            text: `Block rules decline the payment immediately. Review rules flag it for manual inspection but let it through (or hold it, depending on your settings). Allow rules bypass all other matching rules, which is useful for trusted customers.`,
           },
         ],
       },
       {
         title: 'Create your first Block rule',
-        body: `In the Block section, click Add rule. In the rule editor, type: risk_level = 'highest' — then click Add rule. Confirm the prompt that appears.`,
+        body: `In the Block section, click Add rule. In the rule editor, type: risk_level = 'highest', then click Add rule. Confirm the prompt that appears.`,
         gif: {
           caption: 'Record: writing risk_level = \'highest\' in the block rule editor and saving.',
           screen: 'Radar → Rules → New block rule',
@@ -215,17 +215,17 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'warning',
-            text: `Stripe defines "highest" risk as their top confidence tier for fraud. This level is intentionally conservative — false positive rates at this tier are very low. It's one of the safest first rules to deploy.`,
+            text: `Stripe defines "highest" risk as their top confidence tier for fraud. This level is intentionally conservative, so false positive rates at this tier are very low. It's one of the safest first rules to deploy.`,
           },
         ],
       },
       {
         title: 'Understand what you just built',
-        body: `"highest" risk level captures roughly the top 1-2% of payments by fraud likelihood. For most businesses this rule blocks around 0.3-0.8% of all payment volume. The tradeoff: some legitimate payments with unusual signals (international card, new customer, high amount) may have elevated scores — but "highest" is specifically the tier where Stripe's confidence in fraud is greatest.`,
+        body: `"highest" risk level captures roughly the top 1-2% of payments by fraud likelihood. For most businesses this rule blocks around 0.3-0.8% of all payment volume. The tradeoff: some legitimate payments with unusual signals (international card, new customer, high amount) may have elevated scores, but "highest" is specifically the tier where Stripe's confidence in fraud is greatest.`,
         callouts: [
           {
             kind: 'tip',
-            text: `You can always review the payments a rule has blocked by going to Payments → filtering by Blocked → and checking which rule triggered the decline.`,
+            text: `You can always review the payments a rule has blocked by going to **Payments > Blocked** and checking which rule triggered the decline.`,
           },
         ],
       },
@@ -239,7 +239,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `"Elevated" is the medium tier — payments Stripe thinks are worth a second look but hasn't determined are definitely fraud. Putting these in review means they process normally, but you'll see them flagged in your dashboard for manual inspection.`,
+            text: `"Elevated" is the medium tier: payments Stripe thinks are worth a second look but hasn't determined are definitely fraud. Putting these in review means they process normally, but you'll see them flagged in your dashboard for manual inspection.`,
           },
         ],
       },
@@ -253,7 +253,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'fraud-fact',
-            text: `Did you know: The average fraud rate for online merchants is around 0.9% of transactions. For sports betting and gambling platforms it's significantly higher — often 2-4% — because the instant-settlement nature of deposits makes them attractive to fraudsters.`,
+            text: `The average fraud rate for online merchants is around 0.9% of transactions. For sports betting and gambling platforms it's significantly higher, often 2-4%, because the instant-settlement nature of deposits makes them attractive to fraudsters.`,
           },
         ],
       },
@@ -266,7 +266,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Velocity Rules',
     estMinutes: 12,
     intro:
-      `One of the most reliable fraud signals is repetition — the same card, IP address, or email appearing an unusual number of times in a short window. Velocity rules let you count these occurrences and block when they exceed a normal threshold. They are especially effective against automated bot attacks and card testing.`,
+      `One of the most reliable fraud signals is repetition: the same card, IP address, or email appearing an unusual number of times in a short window. Velocity rules let you count these occurrences and block when they exceed a normal threshold. They're especially effective against automated bot attacks and card testing.`,
     narrative:
       `One of your engineers flagged something this morning. Hundreds of small charges, all within a 20-minute window, all from the same two IP addresses. The card numbers are different but the pattern is clear. You need velocity rules.`,
     overviewAddition: `The same IP addresses are still active. Time to shut them down.`,
@@ -282,7 +282,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `Stripe tracks charge counts per card number, per IP address, per email address, and per customer — across daily, weekly, and all-time windows. These counts are global across all Stripe merchants, not just your account. So if a card has been used 50 times today across different businesses, you can see that.`,
+            text: `Stripe tracks charge counts per card number, per IP address, per email address, and per customer across daily, weekly, and all-time windows. These counts are global across all Stripe merchants, not just your account. So if a card has been used 50 times today across different businesses, you can see that.`,
           },
         ],
       },
@@ -314,13 +314,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `Why 15 and not 5? Shared IP addresses are common — office networks, university WiFi, and some ISPs use the same IP for many users. A coffee shop with 20 BetFlow customers all depositing from the same IP is legitimate. But 15 deposits from a single IP in a day starts to look unusual even accounting for shared networks.`,
+            text: `Why 15 and not 5? Shared IP addresses are common: office networks, university WiFi, and some ISPs use the same IP for many users. A coffee shop with 20 BetFlow customers all depositing from the same IP is legitimate. But 15 deposits from a single IP in a day starts to look unusual even accounting for shared networks.`,
           },
         ],
       },
       {
         title: 'Add AND conditions to be more precise',
-        body: `Edit your IP velocity rule. After total_charges_per_ip_daily > 15, add: and is_anonymous_ip = true — the full rule reads: total_charges_per_ip_daily > 15 and is_anonymous_ip = true`,
+        body: `Edit your IP velocity rule. After total_charges_per_ip_daily > 15, add: and is_anonymous_ip = true. The full rule reads: total_charges_per_ip_daily > 15 and is_anonymous_ip = true`,
         gif: {
           caption: 'Record: editing the IP velocity rule to add an AND condition with is_anonymous_ip.',
           screen: 'Radar → Rules → Edit rule',
@@ -328,7 +328,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `is_anonymous_ip is true for traffic from VPNs, proxies, and Tor exit nodes. Combining the velocity threshold with anonymous IP detection makes this rule much more surgical — it catches automated attacks routing through proxies without penalising customers on legitimate shared networks.`,
+            text: `is_anonymous_ip is true for traffic from VPNs, proxies, and Tor exit nodes. Combining the velocity threshold with anonymous IP detection makes this rule much more surgical. It catches automated attacks routing through proxies without penalizing customers on legitimate shared networks.`,
           },
         ],
       },
@@ -342,7 +342,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `Double-colon syntax (::field_name::) accesses PaymentIntent metadata. Any data BetFlow passes in the metadata object on a charge is available as a rule attribute. This is how you build business-specific rules that go beyond Stripe's standard attributes — customer tiers, KYC status, account verification flags, and more.`,
+            text: `Double-colon syntax (::field_name::) accesses PaymentIntent metadata. Any data BetFlow passes in the metadata object on a charge is available as a rule attribute. This is how you build business-specific rules that go beyond Stripe's standard attributes: customer tiers, KYC status, account verification flags, and more.`,
           },
         ],
       },
@@ -363,14 +363,14 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Under Siege: The Payment DDoS',
     estMinutes: 15,
     intro:
-      `A payment DDoS is not a network attack. It is a coordinated flood of fraudulent payment attempts designed to overwhelm your fraud rules, find gaps in your coverage, and get as many charges through as possible before you respond. The attacker does not need every charge to succeed. They need enough to make it worthwhile, and they need to do it fast enough that you cannot react in time.\n\nThe good news is that Radar can stop most of it automatically, if your rules are written correctly. The bad news is that the rules you have written so far are not enough on their own. This module adds the missing layer.`,
+      `A payment DDoS is not a network attack. It's a coordinated flood of fraudulent payment attempts designed to overwhelm your fraud rules, find gaps in your coverage, and get as many charges through as possible before you respond. The attacker doesn't need every charge to succeed. They need enough to make it worthwhile, and they need to do it fast enough that you can't react in time.\n\nThe good news is that Radar can stop most of it automatically, if your rules are written correctly. The bad news is that the rules you've written so far aren't enough on their own. This module adds the missing layer.`,
     narrative:
       `Your engineer just called. Checkout is slowing down across BetFlow. The payments list is filling up with charges faster than you can read them. Someone is hammering the account with dozens of requests per second from rotating IPs and cards. This is a payment DDoS. You have about three minutes before real damage is done.`,
     overviewAddition: `The first time you face a live attack in progress. Speed matters more than perfection.`,
     steps: [
       {
         title: 'Watch it happen first',
-        body: `Before writing any rules, click Start Attack below and watch what lands in your payments list. Open Payments in your Dashboard and refresh it. You will see charges appearing rapidly.\n\nAfter firing: look at the charges. Notice the amounts, the card types, and in the metadata panel of any individual charge, the source_ip field. That is the signal you are going to use.`,
+        body: `Before writing any rules, click Start Attack below and watch what lands in your payments list. Open Payments in your Dashboard and refresh it. You'll see charges appearing rapidly.\n\nAfter firing: look at the charges. Notice the amounts, the card types, and in the metadata panel of any individual charge, the source_ip field. That's the signal you're going to use.`,
         dashboardLink: { label: 'Payments', url: 'https://dashboard.stripe.com/payments' },
         renderDdosPreview: true,
         gif: {
@@ -380,7 +380,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Why velocity rules alone are not enough',
-        body: `You already have a velocity rule for IP addresses. But look at the IPs in the charges that just came in. The attacker is rotating across multiple IPs to stay under your threshold. A single IP velocity rule with a limit of 15 per day does not catch this because each IP only fires a fraction of the total volume.`,
+        body: `You already have a velocity rule for IP addresses. But look at the IPs in the charges that just came in. The attacker is rotating across multiple IPs to stay under your threshold. A single IP velocity rule with a limit of 15 per day doesn't catch this because each IP only fires a fraction of the total volume.`,
         callouts: [
           {
             kind: 'explanation',
@@ -437,12 +437,12 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     intro:
       `Rules catch patterns. Lists catch individuals. When you have specific cards, IP addresses, email addresses, or customers you want to always block (or always allow), lists give you that control without modifying your rule logic.`,
     narrative:
-      `Your support inbox has three emails from real customers whose cards were charged without their knowledge. You have their card fingerprints and email addresses. The rules you have written will not stop these specific cards — lists will.`,
+      `Your support inbox has three emails from real customers whose cards were charged without their knowledge. You have their card fingerprints and email addresses. The rules you've written won't stop these specific cards, but lists will.`,
     overviewAddition: `Rules catch patterns. Lists catch the specific cards you already know are bad.`,
     steps: [
       {
         title: 'Explore the Lists page',
-        body: `Open Radar Lists in your Dashboard. You will see Stripe's built-in global lists and a section for your custom lists. Note that Stripe maintains global blocklists of known-bad cards and IPs — you benefit from these automatically.`,
+        body: `Open Radar Lists in your Dashboard. You'll see Stripe's built-in global lists and a section for your custom lists. Stripe maintains global blocklists of known-bad cards and IPs, and you benefit from these automatically.`,
         dashboardLink: { label: 'Radar Lists', url: 'https://dashboard.stripe.com/radar/lists' },
         gif: {
           caption: 'Record: the Radar Lists page showing global and custom list sections.',
@@ -505,9 +505,9 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: '3D Secure',
     estMinutes: 10,
     intro:
-      `Blocking payments is a blunt instrument. Sometimes you want to add a verification step rather than decline outright — especially for higher-value payments where the friction is worth it. 3D Secure (3DS) does exactly this: it asks the cardholder to authenticate through their bank, which both catches fraudsters and shifts fraud liability away from BetFlow.`,
+      `Blocking payments is a blunt instrument. Sometimes you want to add a verification step rather than decline outright, especially for higher-value payments where the friction is worth it. 3D Secure (3DS) does exactly this: it asks the cardholder to authenticate through their bank, which both catches fraudsters and shifts fraud liability away from BetFlow.`,
     narrative:
-      `Your block rate has improved but you are declining some payments that look borderline. A colleague suggests that instead of blocking them outright, you make those customers prove they are real. That is what 3D Secure is for.`,
+      `Your block rate has improved but you're declining some payments that look borderline. A colleague suggests that instead of blocking them outright, you make those customers prove they're real. That's what 3D Secure is for.`,
     overviewAddition: `Some borderline payments deserve a second look, not an automatic decline.`,
     steps: [
       {
@@ -521,13 +521,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `When 3DS authentication succeeds, fraud liability shifts from the merchant to the card issuer. This means even if a fraudulent payment gets through, BetFlow won't be held liable for the resulting chargeback — the card issuer absorbs the loss. This is called "liability shift" and it's one of the most valuable protections available.`,
+            text: `When 3DS authentication succeeds, fraud liability shifts from the merchant to the card issuer. This means even if a fraudulent payment gets through, BetFlow won't be held liable for the resulting chargeback. The card issuer absorbs the loss. This is called "liability shift" and it's one of the most valuable protections available.`,
           },
         ],
       },
       {
         title: 'Find the Request 3DS section in Rules',
-        body: `Open Radar Rules in your Dashboard. Scroll below the Block and Review sections. You will see a third section: Request 3DS. This is separate from Block and Review.`,
+        body: `Open Radar Rules in your Dashboard. Scroll below the Block and Review sections. You'll see a third section: Request 3DS. This is separate from Block and Review.`,
         dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
           caption: 'Record: scrolling to the Request 3DS section below Block and Review on the Rules page.',
@@ -544,7 +544,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `Instead of blocking elevated-risk charges, you're requesting additional authentication. Genuine cardholders complete 3DS in about 10 seconds via an SMS code or biometric in their banking app. Fraudsters who stole a card number don't have access to the cardholder's phone and can't complete authentication — so the payment declines at the authentication step, not the payment step.`,
+            text: `Instead of blocking elevated-risk charges, you're requesting additional authentication. Genuine cardholders complete 3DS in about 10 seconds via an SMS code or biometric in their banking app. Fraudsters who stole a card number don't have access to the cardholder's phone and can't complete authentication, so the payment declines at the authentication step, not the payment step.`,
           },
         ],
       },
@@ -558,7 +558,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'warning',
-            text: `Stripe amounts are in the smallest currency unit — cents for AUD. 20000 cents = $200.00 AUD. Double-check your amounts when writing rules.`,
+            text: `Stripe amounts are in the smallest currency unit, which is cents for AUD. 20000 cents = $200.00 AUD. Double-check your amounts when writing rules.`,
           },
         ],
       },
@@ -585,14 +585,14 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Handling Disputes',
     estMinutes: 12,
     intro:
-      `Disputes (also called chargebacks) happen when a cardholder tells their bank a charge was unauthorised. The bank immediately reverses the funds and gives the merchant a window to respond with evidence. Understanding the dispute process and knowing how to fight disputes is as important as preventing fraud in the first place.`,
+      `Disputes (also called chargebacks) happen when a cardholder tells their bank a charge was unauthorized. The bank immediately reverses the funds and gives the merchant a window to respond with evidence. Understanding the dispute process and knowing how to fight disputes is as important as preventing fraud in the first place.`,
     narrative:
-      `Four disputes came in overnight. BetFlow has never responded to a dispute before — the previous analyst did not know you could. You are about to find out how the process works and what happens when you actually submit evidence.`,
+      `Four disputes came in overnight. BetFlow has never responded to a dispute before because the previous analyst didn't know you could. You're about to find out how the process works and what happens when you actually submit evidence.`,
     overviewAddition: `BetFlow has been leaving money on the table every time a dispute went uncontested.`,
     steps: [
       {
         title: 'Find the Disputes section',
-        body: `Open Disputes in your Dashboard. Browse the list — note the columns: amount, reason code, status, and response deadline.`,
+        body: `Open Disputes in your Dashboard. Browse the list and note the columns: amount, reason code, status, and response deadline.`,
         dashboardLink: { label: 'Disputes', url: 'https://dashboard.stripe.com/disputes' },
         gif: {
           caption: 'Record: the Disputes list in the Stripe Dashboard showing amount, reason, status, and deadline columns.',
@@ -601,13 +601,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `Dispute reason codes tell you why the cardholder disputed. "Fraudulent" means they claim they didn't make the charge. "Product not received" or "Subscription cancelled" are different reasons requiring different evidence. Always read the reason code first — it determines your defence strategy.`,
+            text: `Dispute reason codes tell you why the cardholder disputed. "Fraudulent" means they claim they didn't make the charge. "Product not received" or "Subscription cancelled" are different reasons requiring different evidence. Always read the reason code first because it determines your defense strategy.`,
           },
         ],
       },
       {
         title: 'Open a dispute and understand the timeline',
-        body: `Click on any dispute. Note: the date the dispute was opened, the response deadline, and the dispute amount (which may include a dispute fee on top of the original charge amount).`,
+        body: `Click on any dispute. Note the date the dispute was opened, the response deadline, and the dispute amount (which may include a dispute fee on top of the original charge amount).`,
         gif: {
           caption: 'Record: opening a dispute detail page showing the timeline and response deadline.',
           screen: 'Dispute detail → Timeline',
@@ -615,7 +615,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'warning',
-            text: `Dispute deadlines are hard cutoffs. Miss the deadline and you automatically lose — there's no extension. Stripe sends email notifications for new disputes, but also consider setting up Stripe webhooks or the Stripe mobile app to get real-time alerts.`,
+            text: `Dispute deadlines are hard cutoffs. Miss the deadline and you automatically lose with no extension. Stripe sends email notifications for new disputes, but also consider setting up Stripe webhooks or the Stripe mobile app to get real-time alerts.`,
           },
         ],
       },
@@ -635,7 +635,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Submit evidence',
-        body: `Fill in the available evidence fields using the test data provided, then click Submit evidence. Note that once submitted, evidence can't be changed.`,
+        body: `Fill in the available evidence fields using the test data provided, then click Submit evidence. Once submitted, evidence can't be changed.`,
         gif: {
           caption: 'Record: filling in evidence fields and clicking Submit.',
           screen: 'Dispute → Evidence → Submit',
@@ -643,7 +643,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Write prevention rules',
-        body: `Open Radar Rules in your Dashboard. Create a Review rule: is_new_customer = true and amount > 10000 — This flags large first-time deposits for manual review before the money moves.`,
+        body: `Open Radar Rules in your Dashboard. Create a Review rule: is_new_customer = true and amount > 10000. This flags large first-time deposits for manual review before the money moves.`,
         dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
           caption: 'Record: adding a review rule for new customers with large deposit amounts.',
@@ -658,7 +658,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Understand dispute outcomes',
-        body: `Open Disputes in your Dashboard. Use the Status filter to view Won and Lost disputes. Open a won dispute — note what evidence was submitted.`,
+        body: `Open Disputes in your Dashboard. Use the Status filter to view Won and Lost disputes. Open a won dispute and note what evidence was submitted.`,
         dashboardLink: { label: 'Disputes', url: 'https://dashboard.stripe.com/disputes' },
         gif: {
           caption: 'Record: filtering disputes by Won status and opening a won dispute to see submitted evidence.',
@@ -667,7 +667,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'fraud-fact',
-            text: `Did you know: Merchants who submit thorough, well-organised evidence win approximately 40-45% of fraud disputes. Merchants who don't respond lose 100% of them. The evidence submission step is literally the difference between recovering your money and not.`,
+            text: `Merchants who submit thorough, well-organized evidence win approximately 40-45% of fraud disputes. Merchants who don't respond lose 100% of them. The evidence submission step is literally the difference between recovering your money and not.`,
           },
         ],
       },
@@ -682,12 +682,12 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     intro:
       `The hidden cost of fraud prevention is legitimate customers getting incorrectly blocked. Every time a real customer's deposit is declined, BetFlow loses that revenue and risks losing the customer permanently. This module covers how to protect your best customers from your own fraud rules using allow rules and precise rule conditions.`,
     narrative:
-      `Your head of growth sent you a message at 9am. Three of BetFlow's top customers had deposits declined last night. Your velocity rules caught them. You need to fix this without undoing everything you have built.`,
+      `Your head of growth sent you a message at 9am. Three of BetFlow's top customers had deposits declined last night. Your velocity rules caught them. You need to fix this without undoing everything you've built.`,
     overviewAddition: `Good fraud rules create false positives. Good fraud analysts fix them.`,
     steps: [
       {
         title: 'Understand false positive cost',
-        body: `Open Radar in your Dashboard. Look at your block rate on the overview. Now consider: if 0.5% of blocked charges are legitimate customers, what is the revenue impact per month at BetFlow's deposit volumes?`,
+        body: `Open Radar in your Dashboard. Look at your block rate on the overview. Now consider: if 0.5% of blocked charges are legitimate customers, what's the revenue impact per month at BetFlow's deposit volumes?`,
         dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
           caption: 'Record: the Radar overview showing block rate metrics.',
@@ -696,7 +696,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `Industry research suggests the average false positive rate for online fraud detection is around 1.3% — meaning roughly 1 in 75 declined payments is a legitimate customer. For a sports betting platform where customers have many alternatives, a declined deposit very often means they simply open a competitor's app.`,
+            text: `Industry research suggests the average false positive rate for online fraud detection is around 1.3%, meaning roughly 1 in 75 declined payments is a legitimate customer. For a sports betting platform where customers have many alternatives, a declined deposit very often means they simply open a competitor's app.`,
           },
         ],
       },
@@ -711,7 +711,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'explanation',
-            text: `KYC-verified customers have proven their identity — they're a known person with a real card linked to a verified account. Running them through aggressive velocity and IP rules creates unnecessary friction. This allow rule bypasses your block rules for verified customers while still protecting against the highest-risk signals.`,
+            text: `KYC-verified customers have proven their identity, so they're a known person with a real card linked to a verified account. Running them through aggressive velocity and IP rules creates unnecessary friction. This allow rule bypasses your block rules for verified customers while still protecting against the highest-risk signals.`,
           },
         ],
       },
@@ -725,7 +725,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Create a risk-specific exception',
-        body: `Create another Allow rule for repeat customers: customer_transaction_count > 20 and risk_score < 65 — This passes through established customers who are below the risk threshold.`,
+        body: `Create another Allow rule for repeat customers: customer_transaction_count > 20 and risk_score < 65. This passes through established customers who are below the risk threshold.`,
         gif: {
           caption: 'Record: adding a compound allow rule with customer_transaction_count > 20 and risk_score < 65.',
           screen: 'Radar → Rules → New allow rule with AND condition',
@@ -741,7 +741,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Calculate your precision',
-        body: `Open Radar in your Dashboard. Note your block rate and your fraud rate. A healthy ratio is fraud rate significantly lower than block rate — if they're close, your rules may be too aggressive or catching too much legitimate traffic.`,
+        body: `Open Radar in your Dashboard. Note your block rate and your fraud rate. A healthy ratio is fraud rate significantly lower than block rate. If they're close, your rules may be too aggressive or catching too much legitimate traffic.`,
         dashboardLink: { label: 'Radar', url: 'https://dashboard.stripe.com/radar' },
         gif: {
           caption: 'Record: comparing block rate to fraud rate on the Radar Overview.',
@@ -763,14 +763,14 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
     title: 'Putting It All Together',
     estMinutes: 8,
     intro:
-      `You have built individual rules and lists throughout this workshop. This final module is about stepping back and thinking about your complete Radar strategy — how the rules interact, what order they run in, and how to maintain and evolve them over time.`,
+      `You've built individual rules and lists throughout this workshop. This final module is about stepping back and thinking about your complete Radar strategy: how the rules interact, what order they run in, and how to maintain and evolve them over time.`,
     narrative:
-      `It has been a full week. Your block rate is up, your dispute rate is down, and only one VIP customer complained. Before you write your end-of-week summary, step back and make sure the whole rule set makes sense and nothing obvious is missing.`,
+      `It's been a full week. Your block rate is up, your dispute rate is down, and only one VIP customer complained. Before you write your end-of-week summary, step back and make sure the whole rule set makes sense and nothing obvious is missing.`,
     overviewAddition: `The goal is a rule set you can explain to your manager in five minutes.`,
     steps: [
       {
         title: 'Audit your complete rule set',
-        body: `Open Radar Rules in your Dashboard. Look at everything you have built today. You should have: Block rules (risk_level, velocity, IP, lists), Review rules (elevated risk, new customer), Request 3DS rules, Allow rules (KYC, repeat customers).`,
+        body: `Open Radar Rules in your Dashboard. Look at everything you've built today. You should have: Block rules (risk_level, velocity, IP, lists), Review rules (elevated risk, new customer), Request 3DS rules, Allow rules (KYC, repeat customers).`,
         dashboardLink: { label: 'Radar Rules', url: 'https://dashboard.stripe.com/radar/rules' },
         gif: {
           caption: 'Record: full view of a completed Radar rule set with all sections visible.',
@@ -779,7 +779,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Check the overall rule order',
-        body: `Verify your rules follow this general priority: Allow rules first, then Block rules, then Review rules. Radar evaluates top-to-bottom within each category — the first match wins.`,
+        body: `Verify your rules follow this general priority: Allow rules first, then Block rules, then Review rules. Radar evaluates top-to-bottom within each category, and the first match wins.`,
         gif: {
           caption: 'Record: showing the full rules page with correct ordering across Allow, Block, and Review.',
           screen: 'Radar → Rules → Full view',
@@ -787,13 +787,13 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
         callouts: [
           {
             kind: 'info',
-            text: `Rule order edge cases: an Allow rule ABOVE a Block rule means the allow fires first and the payment bypasses the block. An Allow rule BELOW a Block rule means the block fires first — the allow never gets evaluated. Always sanity-check order when adding new rules.`,
+            text: `Rule order edge cases: an Allow rule ABOVE a Block rule means the allow fires first and the payment bypasses the block. An Allow rule BELOW a Block rule means the block fires first, and the allow never gets evaluated. Always sanity-check order when adding new rules.`,
           },
         ],
       },
       {
         title: 'Use the rule evaluator for a final audit',
-        body: `In Radar Rules, use "Test rule" on your most important block rule. Run it against 5 different payments from your history — a mix of clearly legitimate and flagged charges.`,
+        body: `In Radar Rules, use "Test rule" on your most important block rule. Run it against 5 different payments from your history, using a mix of clearly legitimate and flagged charges.`,
         gif: {
           caption: 'Record: using the rule evaluator on multiple historical payments.',
           screen: 'Radar → Rules → Test rule → multiple payments',
@@ -801,7 +801,7 @@ export const WORKSHOP_MODULES: WorkshopModule[] = [
       },
       {
         title: 'Set up a Stripe webhook for dispute alerts',
-        body: `Open Webhooks in your Dashboard. Add an endpoint. In the events list, select: charge.dispute.created — this will notify your system any time a new dispute is filed.`,
+        body: `Open Webhooks in your Dashboard. Add an endpoint. In the events list, select: charge.dispute.created. This will notify your system any time a new dispute is filed.`,
         dashboardLink: { label: 'Webhooks', url: 'https://dashboard.stripe.com/webhooks' },
         gif: {
           caption: 'Record: creating a webhook endpoint and subscribing to charge.dispute.created.',

@@ -31,7 +31,7 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
     briefing: [
       'Every online payment involves a chain of actors: the customer, the merchant, the payment processor (Stripe), the card network (Visa, Mastercard), and the issuing bank.',
       'When a customer submits their card details, Stripe tokenises the sensitive data, creates a charge request, and routes it through the appropriate network to the issuing bank for authorization.',
-      'Understanding this flow is essential for debugging failed payments, optimising conversion, and building a robust checkout experience.',
+      'Understanding this flow is key to debugging failed payments, optimising conversion, and building a solid checkout experience.',
     ],
     objectives: [
       'Describe the lifecycle of an online payment from card entry to settlement',
@@ -70,7 +70,7 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
       },
       {
         id: 'q3',
-        prompt: 'Which of these is NOT a party involved in a typical card payment?',
+        prompt: 'Who is NOT involved in a typical card payment?',
         options: [
           { id: 'a', text: 'Issuing bank' },
           { id: 'b', text: 'Card network (e.g. Visa)' },
@@ -91,7 +91,7 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
     briefing: [
       'The PaymentIntent object represents a single payment attempt in Stripe. It tracks the lifecycle from creation through confirmation to completion or failure.',
       'A PaymentIntent goes through states: requires_payment_method → requires_confirmation → requires_action (if 3DS) → processing → succeeded (or requires_payment_method on failure).',
-      'Using PaymentIntents instead of the legacy Charges API gives you built-in support for SCA, 3D Secure, asynchronous payment methods, and automatic retries.',
+      'Using PaymentIntents instead of the legacy Charges API gives you built-in support for SCA, 3D Secure, asynchronous payment methods, and automatic retries. It\'s the way to go for any new integration.',
     ],
     objectives: [
       'Create a PaymentIntent with the correct parameters',
@@ -149,9 +149,9 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
     title: 'Webhooks & Event Handling',
     tagline: 'Reacting to payment events in real time',
     briefing: [
-      'Webhooks are HTTP callbacks that Stripe sends to your server when events occur — payments succeed, fail, are refunded, disputed, and more.',
-      'Because network requests can fail, Stripe retries webhook deliveries for up to 3 days. Your endpoint must be idempotent — processing the same event twice should not cause duplicate side effects.',
-      'Always verify webhook signatures using your endpoint secret to ensure events genuinely come from Stripe and have not been tampered with.',
+      'Webhooks are HTTP callbacks that Stripe sends to your server when events occur: payments succeed, fail, get refunded, disputed, and more.',
+      'Because network requests can fail, Stripe retries webhook deliveries for up to 3 days. Your endpoint needs to be idempotent, meaning processing the same event twice shouldn\'t cause duplicate side effects.',
+      'Always verify webhook signatures using your endpoint secret to make sure events genuinely come from Stripe and haven\'t been tampered with.',
     ],
     objectives: [
       'Set up a webhook endpoint and handle events',
@@ -208,7 +208,7 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
     title: 'Payment Methods & Authentication',
     tagline: 'Cards, wallets, 3DS, and Strong Customer Authentication',
     briefing: [
-      'Stripe supports dozens of payment methods — cards, wallets (Apple Pay, Google Pay), bank debits, buy-now-pay-later, and more. The Payment Element automatically renders the right UI for each.',
+      'Stripe supports dozens of payment methods: cards, wallets (Apple Pay, Google Pay), bank debits, buy-now-pay-later, and more. The Payment Element automatically renders the right UI for each.',
       '3D Secure (3DS) adds a cardholder verification step. When required (e.g. under European SCA regulations), the PaymentIntent moves to requires_action and the customer must authenticate with their bank.',
       'Strong Customer Authentication (SCA) is a European regulation requiring two-factor authentication for most online payments. Stripe handles SCA compliance automatically when you use PaymentIntents and the Payment Element.',
     ],
@@ -295,7 +295,7 @@ export const ONLINE_PAYMENTS_MODULES: WorkshopModule[] = [
       {
         id: 'q2',
         prompt:
-          'Which of these is critical to verify before switching from test mode to live mode?',
+          'What\'s critical to verify before switching from test mode to live mode?',
         options: [
           { id: 'a', text: 'Your website uses a .com domain' },
           { id: 'b', text: 'Webhook endpoints handle events idempotently and return 2xx status codes' },

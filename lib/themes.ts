@@ -43,7 +43,7 @@ export const THEMES: Theme[] = [
     description:
       'Participants learn to protect a live Stripe account using Radar rules, block lists, 3DS, and dispute management.',
     blurb:
-      'The flagship hands-on theme. Participants take control of a live Stripe account and defend it against payment fraud — tuning Radar risk scores, writing custom rules, managing block and allow lists, enforcing 3D Secure, and resolving disputes. Ideal for risk, payments, and operations teams who want practical Radar experience.',
+      'The flagship hands-on theme. Participants take control of a live Stripe account and defend it against payment fraud by tuning Radar risk scores, writing custom rules, managing block and allow lists, enforcing 3D Secure, and resolving disputes. Ideal for risk, payments, and operations teams who want practical Radar experience.',
     status: 'available',
   },
   {
@@ -51,7 +51,7 @@ export const THEMES: Theme[] = [
     Icon: CreditCard,
     title: 'Online Payments 101',
     description:
-      'A hands-on guide to accepting payments on the internet with Stripe — from your first API call to a production-ready integration.',
+      'A hands-on guide to accepting payments on the internet with Stripe, from your first API call to a production-ready integration.',
     blurb:
       'A foundational walkthrough of how money moves through Stripe. Covers PaymentIntents, Stripe.js and Elements, the full payment lifecycle, webhooks, idempotency, payment methods, 3D Secure, and testing strategies. Designed for engineers and product teams who are new to Stripe and want a confident mental model before going live.',
     status: 'available',
@@ -61,9 +61,9 @@ export const THEMES: Theme[] = [
     Icon: RefreshCw,
     title: 'Billing & Subscriptions',
     description:
-      'Design and implement recurring revenue with Stripe Billing — from pricing models to dunning, the customer portal, and revenue analytics.',
+      'Design and implement recurring revenue with Stripe Billing, from pricing models to dunning, the customer portal, and revenue analytics.',
     blurb:
-      'A practical tour of Stripe Billing — modeling subscriptions and pricing, invoices and proration, trials and coupons, the customer portal, dunning and revenue recovery, usage-based billing, and billing analytics. For teams launching or scaling recurring revenue.',
+      'A practical tour of Stripe Billing covering subscriptions and pricing, invoices and proration, trials and coupons, the customer portal, dunning and revenue recovery, usage-based billing, and billing analytics. Built for teams launching or scaling recurring revenue.',
     status: 'available',
   },
   {
@@ -73,7 +73,7 @@ export const THEMES: Theme[] = [
     description:
       'Deep dive into the dispute lifecycle, evidence strategy, and prevention.',
     blurb:
-      'An operational deep dive into disputes and chargebacks — the lifecycle from inquiry to resolution, building winning evidence submissions, and the prevention tactics that reduce dispute rates over time. Built for support, risk, and finance teams.',
+      'An operational deep dive into disputes and chargebacks: the lifecycle from inquiry to resolution, building winning evidence submissions, and the prevention tactics that reduce dispute rates over time. Built for support, risk, and finance teams.',
     status: 'coming_soon',
   },
   {
@@ -81,9 +81,9 @@ export const THEMES: Theme[] = [
     Icon: Link2,
     title: 'Stripe Connect',
     description:
-      'Building platforms and marketplaces — account types, payouts, and onboarding flows.',
+      'Building platforms and marketplaces: account types, payouts, and onboarding flows.',
     blurb:
-      'Everything platforms and marketplaces need to know about Stripe Connect — choosing between account types, designing onboarding flows, handling payouts and fees, and managing connected accounts at scale. For teams building multi-party payment products.',
+      'Everything platforms and marketplaces need to know about Stripe Connect: choosing between account types, designing onboarding flows, handling payouts and fees, and managing connected accounts at scale. For teams building multi-party payment products.',
     status: 'coming_soon',
   },
   {
@@ -91,7 +91,7 @@ export const THEMES: Theme[] = [
     Icon: Microscope,
     title: 'Radar for Fraud Teams',
     description:
-      'Advanced Radar — machine learning, custom models, review queues, and team workflows.',
+      'Advanced Radar: machine learning, custom models, review queues, and team workflows.',
     blurb:
       'The advanced companion to Fraud & Radar, aimed at dedicated fraud teams. Goes deep on the machine-learning behind risk scores, custom rule strategy, review queue workflows, and how analysts collaborate at scale. For mature fraud operations.',
     status: 'coming_soon',

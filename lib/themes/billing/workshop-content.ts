@@ -36,19 +36,19 @@ export const BILLING_MODULES: WorkshopModule[] = [
     questions: [
       {
         id: 'bf-q1',
-        prompt: 'In Stripe Billing, what is the relationship between a Product and a Price?',
+        prompt: 'What\'s the relationship between a Product and a Price in Stripe Billing?',
         options: [
           { id: 'a', text: 'A Product can only have one Price attached to it' },
           { id: 'b', text: 'A Product can have multiple Prices (e.g. monthly, yearly, different currencies)' },
-          { id: 'c', text: 'Prices exist independently and are not linked to Products' },
+          { id: 'c', text: 'Prices exist independently and aren\'t linked to Products' },
           { id: 'd', text: 'A Price can belong to multiple Products simultaneously' },
         ],
         correctOptionId: 'b',
-        explanation: 'A single Product can have many Prices, allowing you to offer different billing intervals, currencies, or tiers for the same product.',
+        explanation: 'A single Product can have many Prices, letting you offer different billing intervals, currencies, or tiers for the same product.',
       },
       {
         id: 'bf-q2',
-        prompt: 'Which pricing model charges customers based on the quantity of units they consume each period?',
+        prompt: 'Which pricing model charges customers based on how many units they consume each period?',
         options: [
           { id: 'a', text: 'Flat-rate pricing' },
           { id: 'b', text: 'Tiered pricing' },
@@ -60,7 +60,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
       },
       {
         id: 'bf-q3',
-        prompt: 'When a Subscription is created, what does Stripe automatically generate?',
+        prompt: 'When you create a Subscription, what does Stripe automatically generate?',
         options: [
           { id: 'a', text: 'A PaymentIntent only' },
           { id: 'b', text: 'An Invoice that attempts payment collection' },
@@ -79,7 +79,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
     tagline: 'Navigate status transitions, trials, and cancellations',
     briefing: [
       'Subscriptions move through several statuses: incomplete, active, past_due, canceled, and unpaid.',
-      'Trials allow customers to use a service before being charged, and cancellation can happen immediately or at period end.',
+      'Trials let customers use a service before being charged, and cancellation can happen immediately or at period end.',
     ],
     objectives: [
       'Understand all subscription statuses and their transitions',
@@ -98,11 +98,11 @@ export const BILLING_MODULES: WorkshopModule[] = [
           { id: 'd', text: 'unpaid' },
         ],
         correctOptionId: 'c',
-        explanation: 'A subscription enters "incomplete" if the initial payment fails, giving you 23 hours to collect payment before it becomes "incomplete_expired".',
+        explanation: 'A subscription enters "incomplete" if the initial payment fails. You\'ve got 23 hours to collect payment before it becomes "incomplete_expired".',
       },
       {
         id: 'sl-q2',
-        prompt: 'When setting up a free trial on a Subscription, what happens at the trial end?',
+        prompt: 'When you set up a free trial on a Subscription, what happens when the trial ends?',
         options: [
           { id: 'a', text: 'The subscription is automatically canceled' },
           { id: 'b', text: 'Stripe generates an invoice and attempts to charge the customer' },
@@ -114,15 +114,15 @@ export const BILLING_MODULES: WorkshopModule[] = [
       },
       {
         id: 'sl-q3',
-        prompt: 'What is the difference between canceling a subscription immediately vs. at period end?',
+        prompt: 'What\'s the difference between canceling a subscription immediately vs. at period end?',
         options: [
-          { id: 'a', text: 'There is no difference; both stop access immediately' },
-          { id: 'b', text: 'At period end keeps the subscription active until the current period expires; immediate cancellation stops it now' },
+          { id: 'a', text: 'There\'s no difference; both stop access immediately' },
+          { id: 'b', text: 'At period end keeps the subscription active until the current period expires. Immediate cancellation stops it now.' },
           { id: 'c', text: 'Immediate cancellation triggers a refund; at period end does not' },
           { id: 'd', text: 'At period end is only available for annual subscriptions' },
         ],
         correctOptionId: 'b',
-        explanation: 'Canceling at period end sets cancel_at_period_end=true, keeping the subscription active until the paid period expires, while immediate cancellation changes the status to canceled right away.',
+        explanation: 'Canceling at period end sets cancel_at_period_end=true, keeping the subscription active until the paid period expires. Immediate cancellation changes the status to canceled right away.',
       },
     ],
   },
@@ -132,7 +132,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
     title: 'Invoices & Payments',
     tagline: 'Understand invoice finalization, collection, and dunning',
     briefing: [
-      'Invoices in Stripe go through a lifecycle: draft → open → paid (or void/uncollectible).',
+      'Invoices in Stripe go through a lifecycle: draft, open, then paid (or void/uncollectible).',
       'Dunning is the process of retrying failed payments using Smart Retries and email reminders to recover revenue.',
     ],
     objectives: [
@@ -144,15 +144,15 @@ export const BILLING_MODULES: WorkshopModule[] = [
     questions: [
       {
         id: 'ip-q1',
-        prompt: 'What is the purpose of the "draft" status on a Stripe Invoice?',
+        prompt: 'What\'s the purpose of the "draft" status on a Stripe Invoice?',
         options: [
           { id: 'a', text: 'It means payment has already been attempted and failed' },
-          { id: 'b', text: 'It allows you to add/remove line items before the invoice is finalized and sent' },
+          { id: 'b', text: 'It lets you add or remove line items before the invoice is finalized and sent' },
           { id: 'c', text: 'It indicates the invoice is waiting for customer approval' },
           { id: 'd', text: 'It means the invoice is a recurring template' },
         ],
         correctOptionId: 'b',
-        explanation: 'Draft invoices can be edited freely—adding items, coupons, or metadata—before being finalized, at which point they become immutable and payment is attempted.',
+        explanation: 'Draft invoices can be edited freely, so you can add items, coupons, or metadata. Once finalized, they become immutable and payment is attempted.',
       },
       {
         id: 'ip-q2',
@@ -176,7 +176,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
           { id: 'd', text: 'Stripe automatically issues a refund' },
         ],
         correctOptionId: 'c',
-        explanation: 'You configure the end-of-dunning behavior in subscription settings—the subscription can be canceled, marked as unpaid, or left in past_due status.',
+        explanation: 'You configure the end-of-dunning behavior in subscription settings. The subscription can be canceled, marked as unpaid, or left in past_due status.',
       },
     ],
   },
@@ -191,13 +191,13 @@ export const BILLING_MODULES: WorkshopModule[] = [
     ],
     objectives: [
       'Configure the Customer Portal for plan changes',
-      'Understand proration behavior during upgrades/downgrades',
+      'Understand proration behavior during upgrades and downgrades',
     ],
     points: 140,
     questions: [
       {
         id: 'cp-q1',
-        prompt: 'Which of the following can customers do in the Stripe Customer Portal by default?',
+        prompt: 'What can customers do in the Stripe Customer Portal by default?',
         options: [
           { id: 'a', text: 'Create new subscriptions to additional products' },
           { id: 'b', text: 'Update their payment method and view invoice history' },
@@ -205,7 +205,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
           { id: 'd', text: 'Modify product prices' },
         ],
         correctOptionId: 'b',
-        explanation: 'The Customer Portal allows customers to update payment methods, view/download invoices, and manage existing subscriptions—but not create new ones or issue refunds.',
+        explanation: 'The Customer Portal lets customers update payment methods, view and download invoices, and manage existing subscriptions. They can\'t create new subscriptions or issue refunds.',
       },
       {
         id: 'cp-q2',
@@ -217,7 +217,7 @@ export const BILLING_MODULES: WorkshopModule[] = [
           { id: 'd', text: 'The customer must pay both the old and new price for the current period' },
         ],
         correctOptionId: 'b',
-        explanation: 'By default, Stripe prorates plan changes—crediting the customer for unused time on the old plan and charging the difference for the new plan.',
+        explanation: 'By default, Stripe prorates plan changes. It credits the customer for unused time on the old plan and charges the difference for the new plan.',
       },
     ],
   },
@@ -259,14 +259,14 @@ export const BILLING_MODULES: WorkshopModule[] = [
           { id: 'd', text: 'Projected revenue for the next 12 months divided by 12' },
         ],
         correctOptionId: 'b',
-        explanation: 'MRR normalizes all recurring subscription revenue to a monthly figure—annual plans are divided by 12, weekly plans multiplied by ~4.33.',
+        explanation: 'MRR normalizes all recurring subscription revenue to a monthly figure. Annual plans are divided by 12, weekly plans multiplied by roughly 4.33.',
       },
       {
         id: 'rr-q3',
         prompt: 'What is "involuntary churn" in the context of subscription billing?',
         options: [
           { id: 'a', text: 'Customers who actively decide to cancel their subscriptions' },
-          { id: 'b', text: 'Revenue lost due to failed payments and expired cards rather than customer choice' },
+          { id: 'b', text: 'Revenue lost due to failed payments and expired cards, rather than customer choice' },
           { id: 'c', text: 'Customers who downgrade to a lower-priced plan' },
           { id: 'd', text: 'Free trial users who never convert to paid plans' },
         ],

@@ -39,7 +39,7 @@ export type ChallengeModule = {
 export const ONLINE_PAYMENTS_STARTING_BALANCE_CENTS = 500_000 // $5,000
 
 export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
-  // MODULE 1 — Create a PaymentIntent
+  // MODULE 1: Create a PaymentIntent
   {
     number: 1,
     id: 'create_payment_intent',
@@ -54,14 +54,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'What is a PaymentIntent?',
         content:
-          'A PaymentIntent represents a single payment attempt. You create one on your server with an amount and currency, then pass its client_secret to the frontend so the customer can confirm the payment. The PaymentIntent tracks every state transition — from creation to success or failure — giving you a complete audit trail. Every modern Stripe integration starts here.',
+          'A PaymentIntent represents a single payment attempt. You create one on your server with an amount and currency, then pass its client_secret to the frontend so the customer can confirm the payment. It tracks every state transition, from creation to success or failure, giving you a complete audit trail. Every modern Stripe integration starts here.',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Open your Stripe Dashboard',
         instruction:
-          'Open the Stripe Dashboard and navigate to the Developers > API keys page. Confirm you can see your test mode publishable key (pk_test_...) and secret key (sk_test_...). These are needed to create PaymentIntents.',
+          'Open the Stripe Dashboard and go to Developers > API keys. Confirm you can see your test mode publishable key (pk_test_...) and secret key (sk_test_...). You\'ll need these to create PaymentIntents.',
         dashboardLink: '/apikeys',
         checkboxLabel: 'I can see my test mode API keys',
       },
@@ -70,7 +70,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Create a PaymentIntent via the API',
         instruction:
-          'Use the Stripe API or your server-side code to create a PaymentIntent with amount: 2000 (i.e. $20.00), currency: "usd", and automatic_payment_methods enabled. Verify the response contains a client_secret and the status is "requires_payment_method".',
+          'Use the Stripe API or your server-side code to create a PaymentIntent with amount: 2000 (that\'s $20.00), currency: "usd", and automatic_payment_methods enabled. Check that the response contains a client_secret and the status is "requires_payment_method".',
         dashboardLink: '/test/payments',
         checkboxLabel: 'I have created a PaymentIntent and can see it in the Dashboard',
       },
@@ -108,7 +108,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
     ],
   },
 
-  // MODULE 2 — Mount the Payment Element
+  // MODULE 2: Mount the Payment Element
   {
     number: 2,
     id: 'mount_payment_element',
@@ -123,14 +123,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'The Payment Element',
         content:
-          'The Payment Element is a prebuilt, embeddable UI component from Stripe that securely collects payment details. It automatically displays the payment methods you have enabled in your Dashboard — cards, wallets, bank debits, and more. It handles input validation, error messaging, and localization. Because it is hosted by Stripe, your server never touches raw card numbers, which simplifies PCI compliance.',
+          'The Payment Element is a prebuilt, embeddable UI component from Stripe that securely collects payment details. It automatically shows the payment methods you\'ve enabled in your Dashboard: cards, wallets, bank debits, and more. It handles input validation, error messaging, and localization. Because Stripe hosts it, your server never touches raw card numbers, which simplifies PCI compliance.',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Enable payment methods',
         instruction:
-          'Go to Settings > Payment methods in your Stripe Dashboard. Ensure at least "Cards" is enabled. Optionally enable Apple Pay, Google Pay, or Link for a richer checkout experience.',
+          'Open your Stripe Dashboard and go to Settings > Payment methods. Make sure at least "Cards" is enabled. You can also enable Apple Pay, Google Pay, or Link for a richer checkout experience.',
         dashboardLink: '/settings/payment_methods',
         checkboxLabel: 'I have confirmed Cards is enabled as a payment method',
       },
@@ -139,7 +139,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Initialize Stripe.js and Elements',
         instruction:
-          'In your frontend code, load Stripe.js with your publishable key, create an Elements instance with the client_secret from your PaymentIntent, and mount the Payment Element to a DOM container. The Payment Element should render a card input form.',
+          'In your frontend code, load Stripe.js with your publishable key, create an Elements instance using the client_secret from your PaymentIntent, and mount the Payment Element to a DOM container. You should see a card input form render on the page.',
         checkboxLabel: 'The Payment Element is rendering on my page',
       },
       {
@@ -183,7 +183,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
     ],
   },
 
-  // MODULE 3 — Handle Confirmation
+  // MODULE 3: Handle Confirmation
   {
     number: 3,
     id: 'handle_confirmation',
@@ -198,14 +198,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'The confirmation flow',
         content:
-          'After the customer fills in the Payment Element, you call stripe.confirmPayment() on the client side. This triggers the actual charge attempt. The result can be a success, a decline, a redirect (for 3DS or bank authentication), or a network error. Your frontend must handle all four outcomes. On success, redirect to a confirmation page. On decline, show the error message from Stripe. On redirect, Stripe handles the flow and returns the customer to your return_url.',
+          'After the customer fills in the Payment Element, you call stripe.confirmPayment() on the client side. This triggers the actual charge attempt. The result can be a success, a decline, a redirect (for 3DS or bank authentication), or a network error. Your frontend needs to handle all four outcomes. On success, redirect to a confirmation page. On decline, show the error message from Stripe. For redirects, Stripe handles the flow and returns the customer to your return_url.',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Set up your return URL',
         instruction:
-          'When calling stripe.confirmPayment(), you must pass a return_url where the customer will be redirected after authentication (e.g. 3DS). Set this to your order confirmation page. Stripe appends the PaymentIntent ID and status as query parameters so you can display the result.',
+          'When calling stripe.confirmPayment(), pass a return_url where the customer gets redirected after authentication (e.g. 3DS). Set this to your order confirmation page. Stripe appends the PaymentIntent ID and status as query parameters so you can display the result.',
         checkboxLabel: 'I have configured a return_url in my confirmPayment call',
       },
       {
@@ -213,7 +213,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Handle confirmation outcomes',
         instruction:
-          'Update your frontend to handle the three possible outcomes of confirmPayment(): (1) error — display error.message to the customer, (2) requires_action — Stripe handles the redirect automatically, (3) success — redirect to your confirmation page. Check the PaymentIntent status on your confirmation page by retrieving it with the payment_intent query parameter.',
+          'Update your frontend to handle the three possible outcomes of confirmPayment(): (1) error, display error.message to the customer; (2) requires_action, Stripe handles the redirect automatically; (3) success, redirect to your confirmation page. Then check the PaymentIntent status on your confirmation page by retrieving it with the payment_intent query parameter.',
         dashboardLink: '/test/payments',
         checkboxLabel: 'My frontend handles success, decline, and redirect outcomes',
       },
@@ -265,7 +265,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
     ],
   },
 
-  // MODULE 4 — Webhook Verification
+  // MODULE 4: Webhook Verification
   {
     number: 4,
     id: 'webhook_verification',
@@ -280,14 +280,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'Why webhooks matter',
         content:
-          'Client-side confirmation is not enough — network issues, browser crashes, or mobile app backgrounding can prevent your frontend from receiving the result. Webhooks are your source of truth. Stripe sends a signed HTTP POST to your server for every event. The payment_intent.succeeded webhook is how you should fulfill orders, not the client-side callback. Always verify the webhook signature using your endpoint signing secret (whsec_...) to ensure the event is authentic.',
+          'Client-side confirmation isn\'t enough on its own. Network issues, browser crashes, or mobile app backgrounding can prevent your frontend from receiving the result. Webhooks are your source of truth. Stripe sends a signed HTTP POST to your server for every event. The payment_intent.succeeded webhook is how you should fulfill orders, not the client-side callback. Always verify the webhook signature using your endpoint signing secret (whsec_...) to make sure the event is authentic.',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Create a webhook endpoint',
         instruction:
-          'Go to Developers > Webhooks in your Stripe Dashboard and add an endpoint. Set the URL to your server\'s webhook route (e.g. https://yoursite.com/api/webhooks/stripe). Subscribe to at least: payment_intent.succeeded, payment_intent.payment_failed, and charge.refunded.',
+          'Open your Stripe Dashboard and navigate to Developers > Webhooks. Click "Add endpoint" and set the URL to your server\'s webhook route (e.g. https://yoursite.com/api/webhooks/stripe). Subscribe to at least: payment_intent.succeeded, payment_intent.payment_failed, and charge.refunded.',
         dashboardLink: '/test/webhooks',
         checkboxLabel: 'I have created a webhook endpoint in the Dashboard',
       },
@@ -296,7 +296,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Implement signature verification',
         instruction:
-          'In your webhook handler, use stripe.webhooks.constructEvent(body, sig, endpointSecret) to verify the signature. The body must be the raw request body (not parsed JSON). The sig is the Stripe-Signature header. The endpointSecret is your webhook signing secret (whsec_...). If verification fails, return a 400 status code.',
+          'In your webhook handler, call stripe.webhooks.constructEvent(body, sig, endpointSecret) to verify the signature. The body needs to be the raw request body (not parsed JSON). The sig is the Stripe-Signature header, and the endpointSecret is your webhook signing secret (whsec_...). If verification fails, return a 400 status code.',
         checkboxLabel: 'My webhook handler verifies signatures with constructEvent()',
       },
       {
@@ -341,7 +341,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
     ],
   },
 
-  // MODULE 5 — Handle Declines & 3DS
+  // MODULE 5: Handle Declines & 3DS
   {
     number: 5,
     id: 'handle_declines_3ds',
@@ -356,14 +356,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'Decline codes and 3D Secure',
         content:
-          'Payments fail for many reasons: insufficient funds, expired cards, incorrect CVC, fraud blocks, and more. Each failure returns a specific decline code (e.g. "insufficient_funds", "card_declined", "expired_card"). Your integration must interpret these codes and present actionable messages to the customer. Additionally, some cards require 3D Secure authentication — if the customer fails or abandons 3DS, the payment remains incomplete. Use test cards to simulate every scenario: 4000 0000 0000 9995 (insufficient funds), 4000 0000 0000 0069 (expired card), 4000 0027 6000 3184 (3DS required).',
+          'Payments fail for many reasons: insufficient funds, expired cards, incorrect CVC, fraud blocks, and more. Each failure returns a specific decline code (e.g. "insufficient_funds", "card_declined", "expired_card"). Your integration needs to interpret these codes and show actionable messages to the customer. Some cards also require 3D Secure authentication, and if the customer fails or abandons 3DS, the payment stays incomplete. Use test cards to simulate every scenario: 4000 0000 0000 9995 (insufficient funds), 4000 0000 0000 0069 (expired card), 4000 0027 6000 3184 (3DS required).',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Map decline codes to user-friendly messages',
         instruction:
-          'In your payment error handler, map Stripe decline codes to human-readable messages. For example: "insufficient_funds" → "Your card has insufficient funds. Please try a different card." "expired_card" → "Your card has expired. Please update your card details." "incorrect_cvc" → "The CVC you entered is incorrect. Please check and try again."',
+          'In your payment error handler, map Stripe decline codes to human-readable messages. For example: "insufficient_funds" → "Your card doesn\'t have enough funds. Try a different card." "expired_card" → "Your card has expired. Please update your card details." "incorrect_cvc" → "The CVC you entered is incorrect. Double-check and try again."',
         checkboxLabel: 'I map at least 3 decline codes to user-friendly messages',
       },
       {
@@ -371,7 +371,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Handle 3D Secure challenges',
         instruction:
-          'Ensure your integration handles the 3DS flow end-to-end. When confirmPayment() returns a requires_action status, Stripe.js automatically opens the 3DS modal or redirects the customer. After authentication, the payment either succeeds or fails. Verify this by testing with card 4000 0027 6000 3184.',
+          'Make sure your integration handles the 3DS flow end-to-end. When confirmPayment() returns a requires_action status, Stripe.js automatically opens the 3DS modal or redirects the customer. After authentication, the payment either succeeds or fails. Test this with card 4000 0027 6000 3184.',
         dashboardLink: '/test/payments',
         checkboxLabel: 'I have tested the 3DS authentication flow with a test card',
       },
@@ -431,7 +431,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
     ],
   },
 
-  // MODULE 6 — Full Checkout Flow
+  // MODULE 6: Full Checkout Flow
   {
     number: 6,
     id: 'full_checkout_flow',
@@ -446,14 +446,14 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'read',
         title: 'Putting it all together',
         content:
-          'A production-ready checkout combines everything from Modules 1–5: server-side PaymentIntent creation, the Payment Element for secure input, client-side confirmation with return_url handling, webhook-based fulfillment, comprehensive decline handling, and 3DS support. In this final challenge, your integration will be tested with a realistic mix of payment scenarios — successes, declines, 3DS challenges, and edge cases. The goal is a checkout that handles every scenario gracefully.',
+          'A production-ready checkout combines everything from Modules 1 through 5: server-side PaymentIntent creation, the Payment Element for secure input, client-side confirmation with return_url handling, webhook-based fulfillment, comprehensive decline handling, and 3DS support. In this final challenge, your integration gets tested with a realistic mix of payment scenarios including successes, declines, 3DS challenges, and edge cases. The goal is a checkout that handles every scenario gracefully.',
       },
       {
         stepNumber: 2,
         type: 'action',
         title: 'Review your complete integration',
         instruction:
-          'Walk through your entire payment flow end-to-end: (1) Server creates PaymentIntent, (2) Frontend mounts Payment Element with client_secret, (3) Customer fills in card details, (4) Frontend calls confirmPayment() with return_url, (5) Webhook receives payment_intent.succeeded and fulfills the order, (6) Confirmation page reads status from URL.',
+          'Walk through your entire payment flow end-to-end: (1) your server creates a PaymentIntent, (2) the frontend mounts the Payment Element with the client_secret, (3) the customer fills in their card details, (4) the frontend calls confirmPayment() with a return_url, (5) your webhook receives payment_intent.succeeded and fulfills the order, (6) the confirmation page reads the status from the URL.',
         dashboardLink: '/test/payments',
         checkboxLabel: 'I have walked through my complete payment flow',
       },
@@ -462,7 +462,7 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
         type: 'action',
         title: 'Check your webhook endpoint health',
         instruction:
-          'Go to Developers > Webhooks and check your endpoint\'s recent deliveries. Ensure there are no persistent failures (4xx or 5xx responses). Every event should show a 200 status. If you see failures, check your server logs and fix the issue before proceeding.',
+          'Navigate to Developers > Webhooks and check your endpoint\'s recent deliveries. Make sure there are no persistent failures (4xx or 5xx responses). Every event should show a 200 status. If you see failures, check your server logs and fix the issue before moving on.',
         dashboardLink: '/test/webhooks',
         checkboxLabel: 'My webhook endpoint shows healthy delivery status',
       },
@@ -483,10 +483,10 @@ export const ONLINE_PAYMENTS_CHALLENGE_MODULES: ChallengeModule[] = [
       {
         stepNumber: 5,
         type: 'fire',
-        title: 'FINAL CHALLENGE — Full Checkout Gauntlet',
-        fireTitle: 'FINAL CHALLENGE — Full Checkout Gauntlet',
+        title: 'FINAL CHALLENGE: Full Checkout Gauntlet',
+        fireTitle: 'FINAL CHALLENGE: Full Checkout Gauntlet',
         fireDescription:
-          '30 charges simulating a realistic day of transactions: successful payments, various decline types, 3DS challenges, and edge cases — all hitting your checkout at once.',
+          '30 charges simulating a realistic day of transactions: successful payments, various decline types, 3DS challenges, and edge cases, all hitting your checkout at once.',
         expectedCharges: 30,
         warningText:
           'This is the final test of your integration. Handle every outcome correctly. Successful charges should complete, declines should fail gracefully, and 3DS should authenticate.',

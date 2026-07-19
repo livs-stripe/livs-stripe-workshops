@@ -35,7 +35,7 @@ export const MODULES: WorkshopModule[] = [
     briefing: [
       'Stripe Radar evaluates every payment in real time using machine learning trained across millions of businesses on the Stripe network.',
       'Each charge receives a risk score from 0 to 100. Higher scores mean a higher likelihood of fraud. Radar then takes an action: allow, review, or block.',
-      'Your job as a defender is to understand how these signals combine so you can tune the system without blocking legitimate customers.',
+      'Your job as a defender is to understand how these signals combine so you can tune things without blocking legitimate customers.',
     ],
     objectives: [
       'Explain what a Radar risk score represents',
@@ -55,11 +55,11 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'b',
         explanation:
-          'Risk scores range 0–100; higher values signal a greater likelihood of fraud.',
+          'Risk scores range from 0 to 100, and higher values signal a greater chance of fraud.',
       },
       {
         id: 'q2',
-        prompt: 'Which is NOT one of Radar\u2019s possible outcomes for a payment?',
+        prompt: 'One of these isn\'t something Radar can do with a payment. Which one?',
         options: [
           { id: 'a', text: 'Allow' },
           { id: 'b', text: 'Place in review' },
@@ -68,7 +68,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'd',
         explanation:
-          'Radar can allow, review, or block. Refunding is a separate, manual or rule-driven action.',
+          'Radar can allow, review, or block. Refunding is a separate action, either manual or rule-driven.',
       },
       {
         id: 'q3',
@@ -95,7 +95,7 @@ export const MODULES: WorkshopModule[] = [
     tagline: 'Writing custom rules that fit your business',
     briefing: [
       'Radar lets you layer custom rules on top of the ML model. Rules use attributes like amount, country, card type, and risk score.',
-      'A good rule set blocks clear fraud, reviews the gray area, and gets out of the way for trusted customers. Overly aggressive rules cause false positives and lost revenue.',
+      'A good rule set blocks clear fraud, reviews the gray area, and gets out of the way for trusted customers. Go too aggressive and you\'ll cause false positives and lost revenue.',
       'Rules are evaluated in order: block rules first, then review rules, then allow rules.',
     ],
     objectives: [
@@ -120,7 +120,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'b',
         explanation:
-          'A threshold of 50 is aggressive — many legitimate payments score above it, so you would block real revenue.',
+          'A threshold of 50 is pretty aggressive. Many legitimate payments score above it, so you\'d end up blocking real revenue.',
       },
       {
         id: 'q2',
@@ -133,7 +133,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'b',
         explanation:
-          'It is suspicious but not certainly fraud — a human review balances risk and customer experience.',
+          'It\'s suspicious but not certainly fraud, so a human review balances risk and customer experience.',
       },
       {
         id: 'q3',
@@ -146,7 +146,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'b',
         explanation:
-          'Block rules take precedence, then review, then allow — the safest outcome wins.',
+          'Block rules take precedence, then review, then allow. The safest outcome wins.',
       },
     ],
   },
@@ -157,7 +157,7 @@ export const MODULES: WorkshopModule[] = [
     tagline: 'Shifting liability with strong authentication',
     briefing: [
       '3D Secure (3DS) adds an authentication step where the cardholder verifies the purchase with their bank, often via a one-time code.',
-      'When 3DS succeeds, liability for fraudulent chargebacks usually shifts from the merchant to the card issuer. This is a powerful defense for high-risk payments.',
+      'When 3DS succeeds, liability for fraudulent chargebacks usually shifts from you to the card issuer. That\'s a powerful defense for high-risk payments.',
       'Strong Customer Authentication (SCA) regulations in Europe require 3DS for many transactions. Radar can trigger 3DS dynamically only when risk is elevated.',
     ],
     objectives: [
@@ -197,7 +197,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'c',
         explanation:
-          'Dynamic 3DS applies friction only where it is warranted, protecting both revenue and security.',
+          'Dynamic 3DS applies friction only where it\'s warranted, protecting both revenue and security.',
       },
     ],
   },
@@ -207,8 +207,8 @@ export const MODULES: WorkshopModule[] = [
     title: 'Reviewing Suspicious Payments',
     tagline: 'Making the call on gray-area charges',
     briefing: [
-      'Payments placed in review need a human decision. Reviewers weigh signals: IP geolocation vs billing address, email age, order contents, and velocity.',
-      'Good reviewers look for corroborating evidence rather than a single red flag. Context matters — a large order is not fraud by itself.',
+      'Payments placed in review need a human decision. You\'ll weigh signals like IP geolocation vs billing address, email age, order contents, and velocity.',
+      'Good reviewers look for corroborating evidence rather than a single red flag. Context matters: a large order isn\'t fraud by itself.',
       'Every decision you make trains your intuition and feeds back into better rules.',
     ],
     objectives: [
@@ -223,17 +223,17 @@ export const MODULES: WorkshopModule[] = [
         prompt:
           'A $40 order matches billing and shipping, uses an established email, but ships to a different state. Best action?',
         options: [
-          { id: 'a', text: 'Block immediately — different state is fraud' },
+          { id: 'a', text: 'Block immediately, different state means fraud' },
           {
             id: 'b',
-            text: 'Approve — a gift or travel easily explains a different shipping state',
+            text: 'Approve, since a gift or travel easily explains a different shipping state',
           },
           { id: 'c', text: 'Refund without contacting the customer' },
           { id: 'd', text: 'Report the customer to their bank' },
         ],
         correctOptionId: 'b',
         explanation:
-          'A single benign signal (different shipping state) with otherwise strong indicators does not justify blocking.',
+          'A single benign signal like a different shipping state, with otherwise strong indicators, doesn\'t justify blocking.',
       },
       {
         id: 'q2',
@@ -259,7 +259,7 @@ export const MODULES: WorkshopModule[] = [
     title: 'Defending Attack Waves',
     tagline: 'Responding when fraud spikes in real time',
     briefing: [
-      'Fraud rarely arrives evenly. Attackers probe in bursts — card testing, account takeover attempts, bot-driven checkout floods.',
+      'Fraud rarely arrives evenly. Attackers probe in bursts: card testing, account takeover attempts, and bot-driven checkout floods.',
       'When your instructor fires an attack wave, you need to identify the attack type and choose the right countermeasure quickly. The faster and more accurate your response, the more points you score.',
       'Rate limiting, dynamic 3DS, blocklists, and review queues are all tools in your kit. The right tool depends on the attack.',
     ],
@@ -305,7 +305,7 @@ export const MODULES: WorkshopModule[] = [
         prompt:
           'During an account-takeover wave, logins succeed but shipping addresses suddenly change. Strong response?',
         options: [
-          { id: 'a', text: 'Ignore it — logins are valid' },
+          { id: 'a', text: 'Ignore it, the logins are valid' },
           {
             id: 'b',
             text: 'Require step-up authentication (3DS / re-verification) on changed shipping details',
@@ -315,7 +315,7 @@ export const MODULES: WorkshopModule[] = [
         ],
         correctOptionId: 'b',
         explanation:
-          'Step-up auth on sensitive changes stops attackers who have valid credentials but not the cardholder\u2019s device.',
+          'Step-up auth on sensitive changes stops attackers who have valid credentials but don\'t have the cardholder\'s device.',
       },
     ],
   },
