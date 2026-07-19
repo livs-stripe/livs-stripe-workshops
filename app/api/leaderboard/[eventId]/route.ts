@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import { participants } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
@@ -11,6 +12,10 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> },
 ) {
   const { eventId } = await params
+
+  if (!(await isInstructor())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const cached = cache.get(eventId)
   if (cached && cached.expiresAt > Date.now()) {

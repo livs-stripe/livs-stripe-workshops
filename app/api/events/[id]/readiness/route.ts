@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import { events, accountPool, attackJobs } from '@/lib/db/schema'
 import { eq, and, sql, gte } from 'drizzle-orm'
@@ -21,6 +22,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
+
+  if (!(await isInstructor())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const checks: ReadinessCheck[] = []
 
   // 1. Stripe API key validation

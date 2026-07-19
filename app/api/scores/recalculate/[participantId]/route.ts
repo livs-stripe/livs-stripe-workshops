@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import {
   chargeOutcomes,
@@ -26,6 +27,13 @@ export async function GET(
   { params }: { params: Promise<{ participantId: string }> },
 ) {
   const { participantId } = await params
+
+  const authHeader = _req.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`
+  if (!isCron && !(await isInstructor())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const [participant] = await db
     .select({

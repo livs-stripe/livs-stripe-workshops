@@ -72,11 +72,17 @@ export async function GET(
       )
     }
 
-    const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(platformKey, { maxNetworkRetries: 2 })
+    const { createLoginLink } = await import('@/lib/stripe-accounts')
+    const loginUrl = await createLoginLink(stripeAccountId)
 
-    const loginLink = await stripe.accounts.createLoginLink(stripeAccountId)
-    return NextResponse.json({ url: loginLink.url })
+    if (!loginUrl) {
+      return NextResponse.json(
+        { error: 'Unable to generate a dashboard link for this account. Contact your facilitator.', code: 'LOGIN_LINK_FAILED' },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json({ url: loginUrl })
   } catch (err: unknown) {
     const stripeErr = err as { code?: string; statusCode?: number; type?: string; message?: string }
     const stripeMsg = stripeErr.message ?? ''

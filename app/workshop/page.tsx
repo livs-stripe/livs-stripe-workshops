@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getCurrentParticipant } from '@/app/actions/participant'
-import { WorkshopExperience } from '@/components/participant/workshop-experience'
 import { WorkshopDocument } from '@/components/participant/workshop-document'
 import { WorkshopHolding } from '@/components/participant/workshop-holding'
 import { ChallengeExperience } from '@/components/participant/challenge-experience'
@@ -104,7 +103,6 @@ export default async function WorkshopPage() {
         event: {
           id: data.event.id,
           name: data.event.name,
-          status: data.event.status,
           eventTheme: data.event.eventTheme,
           ...eventTiming,
         },

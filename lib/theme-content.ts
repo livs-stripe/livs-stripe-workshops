@@ -63,6 +63,16 @@ export function getWorkshopContent(themeId: string): WorkshopContent | null {
         scoredModules: BILLING_SCORED_MODULES,
       }
     }
+    case 'connect': {
+      const {
+        CONNECT_WORKSHOP_MODULES,
+        CONNECT_SCORED_MODULES,
+      } = require('@/lib/themes/connect/workshop-modules')
+      return {
+        workshopModules: CONNECT_WORKSHOP_MODULES,
+        scoredModules: CONNECT_SCORED_MODULES,
+      }
+    }
     default:
       return null
   }
@@ -94,6 +104,16 @@ export function getChallengeContent(themeId: string): ChallengeContent | null {
         startingBalanceCents: BILLING_STARTING_BALANCE_CENTS,
       }
     }
+    case 'connect': {
+      const {
+        CONNECT_CHALLENGE_MODULES,
+        CONNECT_STARTING_BALANCE_CENTS,
+      } = require('@/lib/themes/connect/challenge-modules')
+      return {
+        challengeModules: CONNECT_CHALLENGE_MODULES,
+        startingBalanceCents: CONNECT_STARTING_BALANCE_CENTS,
+      }
+    }
     default:
       return null
   }
@@ -123,6 +143,16 @@ export function getQuizContent(themeId: string): QuizContent | null {
       return {
         modules: BILLING_MODULES,
         totalScore: BILLING_TOTAL_SCORE,
+      }
+    }
+    case 'connect': {
+      const {
+        CONNECT_MODULES,
+        CONNECT_TOTAL_SCORE,
+      } = require('@/lib/themes/connect/workshop-content')
+      return {
+        modules: CONNECT_MODULES,
+        totalScore: CONNECT_TOTAL_SCORE,
       }
     }
     default:

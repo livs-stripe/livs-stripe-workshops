@@ -25,10 +25,34 @@ export function businessNameForSlot(slot: number): string {
   return `${prefix} ${suffix}`
 }
 
+/**
+ * Returns the platform's Connect dashboard URL for viewing a connected account.
+ * The SA must be logged into the platform's Stripe account for this to work.
+ */
 export function dashboardUrlForAccount(stripeAccountId: string): string {
   const isTest = (process.env.STRIPE_SECRET_KEY ?? '').startsWith('sk_test')
   const mode = isTest ? '/test' : ''
   return `https://dashboard.stripe.com${mode}/connect/accounts/${stripeAccountId}`
+}
+
+/**
+ * Generate an Express Dashboard login link for the SA to view a connected account.
+ * This creates a time-limited URL that logs the viewer into the Express Dashboard.
+ */
+export async function createSaLoginLink(stripeAccountId: string): Promise<string | null> {
+  try {
+    const link = await stripeWithRetry(
+      () => stripe.accounts.createLoginLink(stripeAccountId),
+      { context: `sa-login-link:${stripeAccountId}` },
+    )
+    return link.url
+  } catch (err) {
+    console.error('[sa-login-link] Failed:', {
+      stripeAccountId,
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return null
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -60,15 +84,14 @@ async function createOneAccount(
     () =>
       stripe.accounts.create(
         {
-          controller: {
-            losses: { payments: 'stripe' },
-            fees: { payer: 'account' },
-            stripe_dashboard: { type: 'full' },
-            requirement_collection: 'stripe',
-          },
+          type: 'express',
           country: 'US',
           business_profile: { name: businessName },
-          metadata: { source: 'radar-workshop' },
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          metadata: { source: 'stripe-workshop' },
         },
         { idempotencyKey: idemKey },
       ),
@@ -535,17 +558,18 @@ export async function provisionAdditionalAccounts(
 }
 
 /**
- * Generate a login link for a connected account.
- * Falls back to a direct dashboard URL for non-Express accounts.
+ * Generate a login link for a connected Express account.
+ * Returns null if the link cannot be created (account not Express, or Stripe error).
  */
-export async function createLoginLink(stripeAccountId: string): Promise<string> {
+export async function createLoginLink(stripeAccountId: string): Promise<string | null> {
   try {
     const link = await stripeWithRetry(
       () => stripe.accounts.createLoginLink(stripeAccountId),
       { context: `login-link:${stripeAccountId}` },
     )
     return link.url
-  } catch {
-    return `https://dashboard.stripe.com`
+  } catch (err) {
+    console.error('[login-link] Failed for', stripeAccountId, err instanceof Error ? err.message : String(err))
+    return null
   }
 }

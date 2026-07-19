@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import { participants, chargeOutcomes } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -99,8 +100,8 @@ export async function POST(req: Request) {
 
   // Verify caller is either the participant or an SA
   const callerId = jar.get('participant_id')?.value
-  const instructorCookie = jar.get('instructor_session')?.value
-  if (callerId !== participantId && !instructorCookie) {
+  const isSa = await isInstructor()
+  if (callerId !== participantId && !isSa) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

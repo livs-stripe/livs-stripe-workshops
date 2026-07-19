@@ -79,10 +79,10 @@ export const THEMES: Theme[] = [
     Icon: Link2,
     title: 'Stripe Connect',
     description:
-      'Building platforms and marketplaces: account types, payouts, and onboarding flows.',
+      'Everything platforms and marketplaces need to know: account types, onboarding flows, charge routing, payouts, fees, and scaling connected accounts.',
     blurb:
-      'Everything platforms and marketplaces need to know about Stripe Connect: choosing between account types, designing onboarding flows, handling payouts and fees, and managing connected accounts at scale. For teams building multi-party payment products.',
-    status: 'coming_soon',
+      'Choose between account types, design onboarding flows, handle payouts and fees, and manage connected accounts at scale. Covers the full Connect lifecycle from your first connected account to production-grade webhook handling, dispute liability, fee structures, and multi-currency payouts. For engineers and technical architects building platforms or marketplaces on Stripe.',
+    status: 'available',
   },
 ]
 

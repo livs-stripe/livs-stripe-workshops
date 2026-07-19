@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import { events } from '@/lib/db/schema'
 import { sql } from 'drizzle-orm'
@@ -6,32 +7,22 @@ import { sql } from 'drizzle-orm'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const checks: Record<string, string> = {}
-
-  checks.DATABASE_URL = process.env.DATABASE_URL ? 'set' : 'MISSING'
-  checks.INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ? 'set' : 'MISSING'
-  checks.BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET ? 'set' : 'MISSING'
-  checks.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ? 'set' : 'MISSING'
-
+  let dbOk = false
   try {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(events)
-    checks.db_query = `ok (${count} events)`
-  } catch (err) {
-    checks.db_query = `FAILED: ${err instanceof Error ? err.message : String(err)}`
+    await db.select({ one: sql`1` }).from(events).limit(1)
+    dbOk = true
+  } catch {}
+
+  const status = dbOk ? 'healthy' : 'degraded'
+
+  if (!(await isInstructor())) {
+    return NextResponse.json({ status }, { status: dbOk ? 200 : 503 })
   }
 
-  try {
-    const cols = await db.execute(
-      sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'events' ORDER BY ordinal_position`,
-    )
-    checks.events_columns = (cols.rows as { column_name: string }[])
-      .map((r) => r.column_name)
-      .join(', ')
-  } catch (err) {
-    checks.events_columns = `FAILED: ${err instanceof Error ? err.message : String(err)}`
-  }
+  const checks: Record<string, string> = { status }
+  checks.database = dbOk ? 'connected' : 'unreachable'
+  checks.stripe_key = process.env.STRIPE_SECRET_KEY ? 'configured' : 'missing'
+  checks.instructor_password = process.env.INSTRUCTOR_PASSWORD ? 'configured' : 'missing'
 
-  return NextResponse.json(checks, { status: 200 })
+  return NextResponse.json(checks, { status: dbOk ? 200 : 503 })
 }

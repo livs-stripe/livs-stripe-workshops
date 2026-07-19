@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
 export default function EventError({
@@ -41,9 +41,9 @@ export default function EventError({
             <RefreshCw className="size-3.5" />
             Try again
           </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/sa">Back to dashboard</Link>
-          </Button>
+          <Link href="/sa" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            Back to dashboard
+          </Link>
         </div>
       </Card>
     </div>

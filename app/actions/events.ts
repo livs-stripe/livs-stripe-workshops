@@ -18,7 +18,6 @@ import {
   provisionSlotsForEvent,
   provisionAccountPool,
   provisionAdditionalAccounts,
-  dashboardUrlForAccount,
   deleteEventAccounts,
   retryFailedPoolAccounts,
 } from '@/lib/stripe-accounts'
@@ -248,10 +247,7 @@ export async function getEventDetail(eventId: string) {
       status: a.status,
       errorMessage: a.errorMessage ?? null,
       errorCode: a.errorCode ?? null,
-      dashboardUrl:
-        a.status === 'active' && a.stripeAccountId
-          ? dashboardUrlForAccount(a.stripeAccountId)
-          : null,
+      dashboardUrl: null,
     }))
   } catch (err) {
     console.error('[getEventDetail] Failed to fetch connected accounts:', err instanceof Error ? err.message : err)

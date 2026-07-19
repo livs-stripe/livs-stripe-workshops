@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { isInstructor, INSTRUCTOR_NAME, INSTRUCTOR_EMAIL } from '@/lib/instructor-auth'
@@ -7,6 +8,11 @@ import { PLATFORM_LOCKUP_SHORT } from '@/lib/themes'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
 import { SignOutButton } from '@/components/sa/sign-out-button'
 import { SaSidebar } from '@/components/sa/sa-sidebar'
+
+export const metadata: Metadata = {
+  title: 'Facilitator Console | Stripe Workshop Platform',
+  robots: { index: false, follow: false },
+}
 
 export default async function SaLayout({
   children,

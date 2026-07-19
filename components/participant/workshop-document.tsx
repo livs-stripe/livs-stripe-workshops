@@ -307,7 +307,11 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
         <section className="min-w-0 flex-1">
           {allDone ? (
-            <CompletionCard event={event} participantName={participant.name} />
+            <CompletionCard
+              event={event}
+              participantName={participant.name}
+              scoredModules={SCORED_MODULES}
+            />
           ) : null}
 
           <article className="prose prose-neutral max-w-none dark:prose-invert">
@@ -472,9 +476,11 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 function CompletionCard({
   event,
   participantName,
+  scoredModules,
 }: {
   event: EventRow
   participantName: string
+  scoredModules: typeof FRAUD_SCORED_MODULES
 }) {
   return (
     <Card className="mb-8 border-primary/40 bg-primary/[0.04] p-6">
@@ -485,11 +491,11 @@ function CompletionCard({
         </h2>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Nice work, {participantName}. You worked through all {SCORED_MODULES.length}{' '}
+        Nice work, {participantName}. You worked through all {scoredModules.length}{' '}
         modules in {event.name} during this live session.
       </p>
       <ul className="mt-4 grid gap-2">
-        {SCORED_MODULES.map((m) => (
+        {scoredModules.map((m) => (
           <li key={m.id} className="flex items-start gap-2 text-sm">
             <Check className="mt-0.5 size-4 shrink-0 text-success" />
             <span>{m.doneLabel.replace(/^I've /, '')}</span>

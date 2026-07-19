@@ -18,7 +18,7 @@ export type AttackJobStatus = {
 export function useAttackStatus(jobId: string | null) {
   const [data, setData] = useState<AttackJobStatus | null>(null)
   const [isPolling, setIsPolling] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval>>()
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   const startPolling = useCallback((id: string) => {
     setIsPolling(true)

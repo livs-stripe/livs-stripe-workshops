@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   KeyRound,
   Timer,
+  Loader2,
 } from 'lucide-react'
 
 export type ConnectedAccount = {
@@ -261,15 +262,8 @@ export function ConnectedAccountsPanel({
                     <CircleAlert className="size-3" /> Failed
                   </Badge>
                 )}
-                {a.dashboardUrl ? (
-                  <a
-                    href={a.dashboardUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary"
-                  >
-                    View account <ExternalLink className="size-3.5" />
-                  </a>
+                {(a.status === 'active' || a.status === 'assigned') && a.stripeAccountId ? (
+                  <LoginLinkButton stripeAccountId={a.stripeAccountId} />
                 ) : (
                   <span className="inline-flex items-center rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground">
                     Unavailable
@@ -286,5 +280,41 @@ export function ConnectedAccountsPanel({
         </>
       )}
     </Card>
+  )
+}
+
+function LoginLinkButton({ stripeAccountId }: { stripeAccountId: string }) {
+  const [loading, setLoading] = useState(false)
+
+  async function handleClick() {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/sa/accounts/${stripeAccountId}/login-link`)
+      const data = await res.json()
+      if (data.url) {
+        window.open(data.url, '_blank', 'noopener,noreferrer')
+      } else {
+        toast.error('Could not generate login link for this account.')
+      }
+    } catch {
+      toast.error('Failed to fetch login link.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary disabled:opacity-50"
+    >
+      {loading ? (
+        <Loader2 className="size-3.5 animate-spin" />
+      ) : (
+        <ExternalLink className="size-3.5" />
+      )}
+      Open Dashboard
+    </button>
   )
 }

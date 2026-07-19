@@ -121,10 +121,11 @@ export async function processChallengeAttack(attackId: string) {
         id: newId('co'),
         participantId: attack.participantId,
         eventId: attack.eventId,
+        moduleId: mod.id,
         chargeId: result.id,
         amount: charge.amount,
-        blocked: result.status !== 'succeeded',
-        metadata: JSON.stringify(charge.metadata),
+        outcome: result.status === 'succeeded' ? 'succeeded' : 'blocked',
+        isFraudAttempt: isFraud,
       })
     } catch {
       // Charge was declined/blocked by Radar
@@ -135,10 +136,11 @@ export async function processChallengeAttack(attackId: string) {
         id: newId('co'),
         participantId: attack.participantId,
         eventId: attack.eventId,
+        moduleId: mod.id,
         chargeId: `declined_${idemKey}`,
         amount: charge.amount,
-        blocked: true,
-        metadata: JSON.stringify(charge.metadata),
+        outcome: 'blocked',
+        isFraudAttempt: isFraud,
       })
     }
 

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { isInstructor } from '@/lib/instructor-auth'
 import { db } from '@/lib/db'
 import { attackJobs } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -8,6 +10,12 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> },
 ) {
   const { jobId } = await params
+
+  const jar = await cookies()
+  const callerId = jar.get('participant_id')?.value
+  if (!callerId && !(await isInstructor())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const [job] = await db
     .select({

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { joinEvent } from '@/app/actions/participant'
 import { CodeInput, type CodeInputHandle } from '@/components/participant/code-input'
 import { Loader2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 const ERROR_MESSAGES: Record<string, string> = {
   CODE_NOT_FOUND: "That code didn't match any active session. Check with your facilitator.",
@@ -113,7 +115,7 @@ export function JoinFlow() {
         >
           Email
         </label>
-        <input
+        <Input
           id="email"
           name="email"
           type="email"
@@ -123,7 +125,6 @@ export function JoinFlow() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="test@example.com"
           disabled={joining}
-          className="join-input"
         />
         <p className="text-[12px] text-muted-foreground">
           Used to identify you in this session only. No account is created.
@@ -139,7 +140,7 @@ export function JoinFlow() {
           <span className="font-semibold">Display name</span>{' '}
           <span className="font-normal normal-case">(optional)</span>
         </label>
-        <input
+        <Input
           id="displayName"
           name="name"
           value={displayName}
@@ -147,7 +148,6 @@ export function JoinFlow() {
           placeholder="First name or nickname"
           autoComplete="nickname"
           disabled={joining}
-          className="join-input"
         />
         <p className="text-[12px] text-muted-foreground">
           Shown on the live leaderboard and facilitator view.
@@ -155,10 +155,11 @@ export function JoinFlow() {
       </div>
 
       {/* Submit */}
-      <button
+      <Button
         type="submit"
+        size="lg"
+        className="h-[52px] w-full text-[16px] font-semibold"
         disabled={!canSubmit || joining}
-        className="h-[52px] w-full rounded-lg border-none bg-primary text-[16px] font-semibold text-white transition-all hover:bg-primary-hover hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(99,91,255,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-primary/50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
       >
         {joining ? (
           <span className="inline-flex items-center gap-2">
@@ -166,9 +167,9 @@ export function JoinFlow() {
             Joining…
           </span>
         ) : (
-          'Join session →'
+          'Join session'
         )}
-      </button>
+      </Button>
     </form>
   )
 }

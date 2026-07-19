@@ -55,7 +55,7 @@ export async function stripeWithRetry<T>(
   }
 }
 
-function parseRetryAfter(err: Stripe.errors.StripeRateLimitError): number {
+function parseRetryAfter(err: InstanceType<typeof Stripe.errors.StripeRateLimitError>): number {
   const header = (err.headers as Record<string, string>)?.['retry-after']
   if (header) {
     const seconds = Number(header)
