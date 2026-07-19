@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { events, participants, attackWaves, moduleProgress } from '@/lib/db/schema'
+import { events, participants, attackWaves, moduleProgress, accountPool, connectedAccounts } from '@/lib/db/schema'
 import { and, desc, eq, gte, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { newId, newAccessCode } from '@/lib/id'
@@ -17,11 +17,11 @@ import {
   provisionAccountsForEvent,
   provisionSlotsForEvent,
   provisionAccountPool,
+  provisionAdditionalAccounts,
   dashboardUrlForAccount,
   deleteEventAccounts,
   retryFailedPoolAccounts,
 } from '@/lib/stripe-accounts'
-import { connectedAccounts } from '@/lib/db/schema'
 
 async function getUserId() {
   return requireInstructor()
@@ -449,6 +449,54 @@ export async function retryFailedAccounts(eventId: string) {
     created: poolResult.created + legacyResult.created,
     failed: poolResult.failed + legacyResult.failed,
   }
+}
+
+export async function addEventCapacity(
+  eventId: string,
+  additionalAccounts: number,
+): Promise<{ newMax: number; created: number; failed: number }> {
+  const userId = await getUserId()
+
+  if (!Number.isInteger(additionalAccounts) || additionalAccounts < 1 || additionalAccounts > 50) {
+    throw new Error('You can add between 1 and 50 accounts at a time')
+  }
+
+  const [event] = await db
+    .select({
+      id: events.id,
+      maxParticipants: events.maxParticipants,
+      status: events.status,
+    })
+    .from(events)
+    .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
+    .limit(1)
+
+  if (!event) throw new Error('Event not found')
+  if (event.status !== 'active') throw new Error('Can only add capacity to active sessions')
+
+  const currentMax = event.maxParticipants
+  const newMax = currentMax + additionalAccounts
+
+  if (newMax > 200) {
+    throw new Error(`Adding ${additionalAccounts} would exceed the 200-account limit (currently at ${currentMax})`)
+  }
+
+  const [{ existingPoolCount }] = await db
+    .select({ existingPoolCount: sql<number>`count(*)::int` })
+    .from(accountPool)
+    .where(eq(accountPool.eventId, eventId))
+
+  await db
+    .update(events)
+    .set({ maxParticipants: newMax })
+    .where(eq(events.id, eventId))
+
+  provisionAdditionalAccounts(eventId, additionalAccounts, existingPoolCount).catch((err) =>
+    console.error('[addCapacity] provisioning error:', err),
+  )
+
+  revalidatePath(`/sa/events/${eventId}`)
+  return { newMax, created: additionalAccounts, failed: 0 }
 }
 
 export async function getEventStats(eventId: string) {

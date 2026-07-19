@@ -459,6 +459,82 @@ export async function provisionSlotsForEvent(
 }
 
 /**
+ * Provision additional accounts into the pool and legacy table for an existing event.
+ * Uses an offset so idempotency keys and business names don't collide with existing accounts.
+ */
+export async function provisionAdditionalAccounts(
+  eventId: string,
+  additionalCount: number,
+  existingCount: number,
+): Promise<{ created: number; failed: number }> {
+  let created = 0
+  let failed = 0
+
+  for (let i = 0; i < additionalCount; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, PROVISION_DELAY_MS))
+
+    const slotIndex = existingCount + i + 1
+    const businessName = businessNameForSlot(slotIndex)
+    const idemKey = idempotencyKey(eventId, 'expand-pool', String(slotIndex))
+
+    try {
+      const stripeAccountId = await createOneAccount(businessName, idemKey)
+
+      await db.insert(accountPool).values({
+        id: newId('ap'),
+        eventId,
+        stripeAccountId,
+        status: 'available',
+      })
+
+      await db.insert(connectedAccounts).values({
+        id: newId('ca'),
+        eventId,
+        stripeAccountId,
+        businessName,
+        slotNumber: slotIndex,
+        status: 'active',
+      })
+
+      created++
+    } catch (err) {
+      const stripeErr = extractStripeError(err)
+      console.error('[expand] Failed to provision additional account:', {
+        slotIndex,
+        eventId,
+        error: stripeErr.message,
+      })
+
+      if (err instanceof Stripe.errors.StripeRateLimitError) {
+        await new Promise((r) => setTimeout(r, 2000))
+        try {
+          const retryKey = idempotencyKey(eventId, 'expand-pool-retry', String(slotIndex))
+          const stripeAccountId = await createOneAccount(businessName, retryKey)
+          await db.insert(accountPool).values({ id: newId('ap'), eventId, stripeAccountId, status: 'available' })
+          await db.insert(connectedAccounts).values({ id: newId('ca'), eventId, stripeAccountId, businessName, slotNumber: slotIndex, status: 'active' })
+          created++
+          continue
+        } catch {
+          // fall through
+        }
+      }
+
+      await db.insert(accountPool).values({
+        id: newId('ap'),
+        eventId,
+        stripeAccountId: '',
+        status: 'failed',
+        errorMessage: stripeErr.message,
+        errorCode: stripeErr.code,
+      })
+      failed++
+    }
+  }
+
+  return { created, failed }
+}
+
+/**
  * Generate a login link for a connected account.
  * Falls back to a direct dashboard URL for non-Express accounts.
  */

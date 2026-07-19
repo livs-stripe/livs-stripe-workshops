@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import useSWR from 'swr'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,9 @@ import {
   Copy,
   Check,
   Loader2,
+  Plus,
 } from 'lucide-react'
+import { addEventCapacity } from '@/app/actions/events'
 
 type ReadinessCheck = {
   id: string
@@ -85,9 +87,29 @@ export function ReadinessChecklist({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // Capacity warning
+  // Capacity tracking
   const assigned = provision?.assigned ?? 0
   const remaining = maxParticipants - assigned
+
+  // Add capacity state
+  const [showAddCapacity, setShowAddCapacity] = useState(false)
+  const [additionalCount, setAdditionalCount] = useState(10)
+  const [isPending, startTransition] = useTransition()
+  const [addResult, setAddResult] = useState<string | null>(null)
+
+  function handleAddCapacity() {
+    setAddResult(null)
+    startTransition(async () => {
+      try {
+        const result = await addEventCapacity(eventId, additionalCount)
+        setAddResult(`Added ${additionalCount} accounts. New capacity: ${result.newMax}`)
+        setShowAddCapacity(false)
+        setProvisionDone(false)
+      } catch (err) {
+        setAddResult(err instanceof Error ? err.message : 'Failed to add capacity')
+      }
+    })
+  }
 
   return (
     <Card className="p-5">
@@ -131,20 +153,102 @@ export function ReadinessChecklist({
         )}
       </ul>
 
-      {/* Capacity warning */}
+      {/* Capacity warning + add capacity */}
       {assigned > 0 && remaining <= 5 && remaining > 0 && (
         <div className="mb-4 rounded-md border border-amber-300/50 bg-amber-50 p-3 dark:border-amber-700/50 dark:bg-amber-950/20">
-          <p className="text-xs text-amber-800 dark:text-amber-200">
-            {assigned}/{maxParticipants} accounts assigned — {remaining}{' '}
-            remaining. New participants may experience a short wait.
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-amber-800 dark:text-amber-200">
+              {assigned}/{maxParticipants} accounts assigned, {remaining} remaining.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 gap-1 text-xs"
+              onClick={() => setShowAddCapacity(true)}
+            >
+              <Plus className="size-3" /> Add accounts
+            </Button>
+          </div>
         </div>
       )}
       {assigned >= maxParticipants && (
         <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
-          <p className="text-xs text-destructive">
-            Capacity reached. New join attempts will be queued.
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-destructive">
+              Capacity reached ({maxParticipants}/{maxParticipants} accounts assigned).
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 gap-1 border-destructive/30 text-xs text-destructive hover:bg-destructive/10"
+              onClick={() => setShowAddCapacity(true)}
+            >
+              <Plus className="size-3" /> Add accounts
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Add capacity dialog */}
+      {showAddCapacity && (
+        <div className="mb-4 rounded-lg border bg-card p-4 shadow-sm">
+          <h4 className="mb-3 text-sm font-semibold">Add participant accounts</h4>
+          <p className="mb-3 text-xs text-muted-foreground">
+            New Stripe accounts will be provisioned and added to the pool. This takes about 1 second per account.
           </p>
+          <div className="mb-3 flex items-center gap-3">
+            <label htmlFor="addCount" className="text-sm text-muted-foreground whitespace-nowrap">
+              Accounts to add
+            </label>
+            <select
+              id="addCount"
+              value={additionalCount}
+              onChange={(e) => setAdditionalCount(Number(e.target.value))}
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+            >
+              {[5, 10, 15, 20, 25, 30, 40, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n} accounts
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Current capacity: {maxParticipants} &rarr; New capacity: {maxParticipants + additionalCount}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleAddCapacity}
+              disabled={isPending}
+              className="gap-1.5"
+            >
+              {isPending ? (
+                <><Loader2 className="size-3 animate-spin" /> Provisioning...</>
+              ) : (
+                <><Plus className="size-3" /> Add {additionalCount} accounts</>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAddCapacity(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Add capacity result */}
+      {addResult && (
+        <div className={`mb-4 rounded-md p-3 text-xs ${
+          addResult.startsWith('Added')
+            ? 'border border-emerald-300/50 bg-emerald-50 text-emerald-800'
+            : 'border border-destructive/30 bg-destructive/5 text-destructive'
+        }`}>
+          {addResult}
         </div>
       )}
 
