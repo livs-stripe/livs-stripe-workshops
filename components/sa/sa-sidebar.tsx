@@ -17,7 +17,7 @@ const NAV = [
 
 const RESOURCES = [
   { href: '/sa/themes', label: 'Themes', icon: Palette, external: false },
-  { href: '#', label: 'Help & Docs', icon: LifeBuoy, external: true },
+  { href: '/sa/help', label: 'Help & Docs', icon: LifeBuoy, external: false },
 ] as const
 
 export function SaSidebar() {
