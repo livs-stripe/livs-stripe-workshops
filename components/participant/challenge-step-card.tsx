@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import type { ChallengeStep } from '@/lib/challenge-modules'
+import { ChallengeInstruction } from '@/components/participant/challenge-instruction'
 
 type StepState = 'locked' | 'active' | 'completed'
 
@@ -119,16 +120,14 @@ export function ChallengeStepCard({
 
       {/* Read type */}
       {step.type === 'read' && step.content && (
-        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-          {step.content}
-        </p>
+        <ChallengeInstruction text={step.content} className="mb-4" />
       )}
 
       {/* Action type */}
       {step.type === 'action' && (
         <div className="mb-4">
           {step.instruction && (
-            <p className="mb-3 text-sm text-muted-foreground">{step.instruction}</p>
+            <ChallengeInstruction text={step.instruction} className="mb-3" />
           )}
           {step.dashboardLink && (
             <a
@@ -158,7 +157,7 @@ export function ChallengeStepCard({
       {step.type === 'rule' && (
         <div className="mb-4">
           {step.instruction && (
-            <p className="mb-3 text-sm text-muted-foreground">{step.instruction}</p>
+            <ChallengeInstruction text={step.instruction} className="mb-3" />
           )}
           {step.ruleCode && (
             <div className="mb-3 flex items-center gap-2 rounded-md border bg-slate-900 px-4 py-3">

@@ -20,6 +20,17 @@ export type Callout = {
 export type WorkshopGif = {
   caption: string
   screen: string // dashboard path, e.g. "Radar → Rules"
+  /**
+   * Path to an animated GIF in /public, e.g.
+   * "/recordings/connect/03-oauth-onboarding/02-create-account-link.gif".
+   * When present, the real recording plays inline (auto-loop, muted). When
+   * absent, the branded placeholder renders instead.
+   */
+  src?: string
+  /** Descriptive alt text for the recording (accessibility). Falls back to caption. */
+  alt?: string
+  /** Aspect ratio for the recording frame. Defaults to 16/9. */
+  aspectRatio?: '16/9' | '4/3' | '3/2'
 }
 
 export type DashboardUrl = {
