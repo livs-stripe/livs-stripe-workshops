@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { events, participants, attackWaves, moduleProgress, accountPool, connectedAccounts } from '@/lib/db/schema'
 import { and, desc, eq, gte, or, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { newId, newAccessCode } from '@/lib/id'
 import { getAttackWaveType } from '@/lib/workshop-content'
 import { requireInstructor } from '@/lib/instructor-auth'
@@ -184,14 +185,26 @@ export async function createEvent(formData: FormData) {
   // Pre-provision Stripe Connect accounts:
   // 1. Legacy connected_accounts table (for SA dashboard panel)
   // 2. Account pool (for participant claiming on join)
-  // Both run async — don't block event creation. Pool uses batches of 5
-  // with 200ms delays to stay under Stripe rate limits for 50 accounts.
-  provisionAccountsForEvent(id, maxParticipants).catch((err) =>
-    console.error('[createEvent] connected_accounts provisioning error:', err),
-  )
-  provisionAccountPool(id, maxParticipants).catch((err) =>
-    console.error('[createEvent] account pool provisioning error:', err),
-  )
+  //
+  // This must run via `after()` rather than a bare fire-and-forget promise.
+  // On Vercel the serverless function is frozen the instant this action
+  // returns, which would kill un-awaited work mid-flight and leave the pool
+  // empty (readiness hangs at 0/N forever). `after()` keeps the invocation
+  // alive until provisioning finishes while still returning to the SA
+  // immediately. Note: this is bounded by the route's maxDuration, so very
+  // large events should be topped up via the "Add accounts" flow.
+  after(async () => {
+    const results = await Promise.allSettled([
+      provisionAccountsForEvent(id, maxParticipants),
+      provisionAccountPool(id, maxParticipants),
+    ])
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') {
+        const label = i === 0 ? 'connected_accounts' : 'account pool'
+        console.error(`[createEvent] ${label} provisioning error:`, r.reason)
+      }
+    })
+  })
 
   revalidatePath('/sa')
   return { id, accessCode, eventType }
@@ -295,9 +308,13 @@ export async function setEventStatus(eventId: string, status: 'active' | 'ended'
       })
       .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
 
-    deleteEventAccounts(eventId).catch((err) =>
-      console.error('[setEventStatus] Account cleanup error:', err),
-    )
+    after(async () => {
+      try {
+        await deleteEventAccounts(eventId)
+      } catch (err) {
+        console.error('[setEventStatus] Account cleanup error:', err)
+      }
+    })
   } else {
     const [ev] = await db
       .select({ durationMinutes: events.durationMinutes })
@@ -351,10 +368,15 @@ export async function endEventNow(eventId: string) {
     })
     .where(and(eq(events.id, eventId), eq(events.saUserId, userId)))
 
-  // Clean up connected accounts asynchronously
-  deleteEventAccounts(eventId).catch((err) =>
-    console.error('[endEventNow] Account cleanup error:', err),
-  )
+  // Clean up connected accounts after the response — a bare fire-and-forget
+  // promise would be killed when this action returns on Vercel.
+  after(async () => {
+    try {
+      await deleteEventAccounts(eventId)
+    } catch (err) {
+      console.error('[endEventNow] Account cleanup error:', err)
+    }
+  })
 
   revalidatePath(`/sa/events/${eventId}`)
   revalidatePath('/sa')
@@ -487,9 +509,16 @@ export async function addEventCapacity(
     .set({ maxParticipants: newMax })
     .where(eq(events.id, eventId))
 
-  provisionAdditionalAccounts(eventId, additionalAccounts, existingPoolCount).catch((err) =>
-    console.error('[addCapacity] provisioning error:', err),
-  )
+  // Keep the invocation alive until the new accounts are actually created —
+  // a bare fire-and-forget promise is killed when this action returns on
+  // Vercel, leaving the pool short of the new capacity.
+  after(async () => {
+    try {
+      await provisionAdditionalAccounts(eventId, additionalAccounts, existingPoolCount)
+    } catch (err) {
+      console.error('[addCapacity] provisioning error:', err)
+    }
+  })
 
   revalidatePath(`/sa/events/${eventId}`)
   return { newMax, created: additionalAccounts, failed: 0 }
