@@ -108,11 +108,17 @@ export function SaEventList({
   )
 
   const statCards = [
-    { label: 'Active events right now', value: counts.activeEvents, icon: Radio },
+    {
+      label: 'Active events right now',
+      value: counts.activeEvents,
+      icon: Radio,
+      accent: 'success' as const,
+    },
     {
       label: 'Events created (all time)',
       value: counts.totalEvents,
       icon: CalendarPlus,
+      accent: 'primary' as const,
     },
   ]
 
@@ -128,7 +134,7 @@ export function SaEventList({
       msLeft < 7 * 24 * 60 * 60 * 1000
 
     const inner = (
-      <Card className="h-full p-5 transition-colors hover:border-primary/50">
+      <Card className="h-full p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-stripe-lg">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" className="gap-1">
@@ -178,7 +184,7 @@ export function SaEventList({
           <span className="flex items-center gap-1.5">
             <Users className="size-4" />
             {event.participantCount}{' '}
-            {event.participantCount === 1 ? 'in this session' : 'in this session'}
+            {event.participantCount === 1 ? 'participant' : 'participants'}
           </span>
           <span className="flex items-center gap-1 text-foreground">
             {expired ? 'View' : 'Open'} <ArrowRight className="size-3.5" />
@@ -237,14 +243,32 @@ export function SaEventList({
         <CreateEventDialog />
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-2">
+      <div className="mb-8 grid grid-cols-2 gap-4">
         {statCards.map((s) => (
-          <Card key={s.label} className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <s.icon className="size-4" />
-              <span className="text-xs">{s.label}</span>
+          <Card key={s.label} className="relative overflow-hidden p-5">
+            <span
+              aria-hidden
+              className={`absolute inset-y-0 left-0 w-1 ${
+                s.accent === 'success' ? 'bg-success' : 'bg-primary'
+              }`}
+            />
+            <div className="flex items-center gap-4">
+              <span
+                className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
+                  s.accent === 'success'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-primary/10 text-primary'
+                }`}
+              >
+                <s.icon className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="label-caps text-muted-foreground">{s.label}</p>
+                <p className="mt-1 text-3xl font-semibold leading-none tabular-nums tracking-tight text-foreground">
+                  {s.value}
+                </p>
+              </div>
             </div>
-            <p className="mt-2 text-2xl font-semibold tabular-nums">{s.value}</p>
           </Card>
         ))}
       </div>

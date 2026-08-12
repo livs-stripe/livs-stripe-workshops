@@ -267,10 +267,10 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
                   key={m.id}
                   onClick={() => setSelectedId(m.id)}
                   className={[
-                    'flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                    'relative flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all',
                     isActive
-                      ? 'border-primary/50 bg-primary/10'
-                      : 'border-border bg-card hover:bg-accent',
+                      ? 'border-primary/40 bg-primary/[0.07] shadow-stripe before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                      : 'border-border bg-card hover:border-primary/30 hover:bg-accent',
                   ].join(' ')}
                 >
                   <span className="shrink-0">
@@ -344,11 +344,27 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
               {selected.steps.map((step, si) => {
                 const stepDone = completedSteps.has(si)
                 return (
-                  <li key={si} className="rounded-xl border border-border bg-card p-5">
+                  <li
+                    key={si}
+                    className="rounded-xl border border-border bg-card p-5 shadow-stripe transition-shadow duration-200 hover:shadow-stripe-lg"
+                  >
                     <div className="mb-3 flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {step.title}
-                      </h3>
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span
+                          className={[
+                            'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums transition-colors',
+                            stepDone
+                              ? 'bg-success/10 text-success'
+                              : 'bg-primary/10 text-primary',
+                          ].join(' ')}
+                          aria-hidden
+                        >
+                          {si + 1}
+                        </span>
+                        <h3 className="text-lg font-semibold leading-snug text-foreground">
+                          {step.title}
+                        </h3>
+                      </div>
                       <button
                         type="button"
                         onClick={() => toggleStep(si)}
