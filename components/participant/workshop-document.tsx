@@ -9,9 +9,10 @@ import { getWorkshopContent } from '@/lib/theme-content'
 import { getTheme } from '@/lib/themes'
 import { WorkshopCallout } from '@/components/participant/workshop-callout'
 import { DashboardGif } from '@/components/participant/dashboard-gif'
-import { DashboardLink } from '@/components/participant/dashboard-link'
+import { DashboardDeepLink } from '@/components/participant/dashboard-deep-link'
 import { NarrativeBlock } from '@/components/participant/narrative-block'
-import { StripeDashboardButton } from '@/components/participant/stripe-dashboard-button'
+import { OpenDashboardButton } from '@/components/participant/open-dashboard-button'
+import { WorkshopStripeSetup } from '@/components/participant/workshop-stripe-setup'
 import { CredentialsCard } from '@/components/participant/credentials-card'
 import { DdosAttackTrigger } from '@/components/participant/ddos-attack-trigger'
 import { StripeWordmark } from '@/components/brand/stripe-wordmark'
@@ -301,7 +302,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
           {/* Stripe Dashboard button */}
           <div className="mt-4 border-t border-border pt-4">
-            <StripeDashboardButton participantId={participant.id} />
+            <OpenDashboardButton themeId={event.eventTheme} />
           </div>
         </aside>
 
@@ -339,6 +340,11 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
             <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
               {selected.intro}
             </p>
+
+            {/* One-time Dashboard access setup, shown on the first module only. */}
+            {selected.id === WORKSHOP_MODULES[0]?.id && (
+              <WorkshopStripeSetup themeId={event.eventTheme} />
+            )}
 
             <ol className="flex list-none flex-col gap-8 pl-0">
               {selected.steps.map((step, si) => {
@@ -385,7 +391,9 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
                     {step.dashboardLink && (
                       <div className="mb-3">
-                        <DashboardLink to={step.dashboardLink.url} label={step.dashboardLink.label} />
+                        <DashboardDeepLink themeId={event.eventTheme} page={step.dashboardLink.url}>
+                          {step.dashboardLink.label}
+                        </DashboardDeepLink>
                       </div>
                     )}
 
@@ -397,7 +405,7 @@ export function WorkshopDocument({ initialData }: { initialData: InitialData }) 
 
                     {step.renderDashboardButton && (
                       <div className="my-4 max-w-xs">
-                        <StripeDashboardButton participantId={participant.id} />
+                        <OpenDashboardButton themeId={event.eventTheme} />
                       </div>
                     )}
 
